@@ -6,6 +6,6 @@
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
 
-class MovieScenePipeline(object):
+class ScenePipeline(object):
     def process_item(self, item, spider):
         return item
