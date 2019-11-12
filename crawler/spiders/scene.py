@@ -5,7 +5,7 @@
 # ----------------------
 import json
 import scrapy
-from scene.items import MovieItem
+from crawler.items.scene import Movie
 from crawler.configs import scene as config
 
 """
@@ -29,7 +29,7 @@ class SceneSpider(scrapy.Spider):
 
         :return:
         """
-        yield scrapy.Request(url=config.url_movie_list + '11111', callback=self.parse)
+        yield scrapy.Request(url=config.URL_MOVIE_LIST + '11111', callback=self.parse)
 
     def parse(self, response):
         """
@@ -45,7 +45,7 @@ class SceneSpider(scrapy.Spider):
             # 获取每一页电影列表
             # for page in range(int(total / config.movie_list_num) + 1):
             for page in range(1):
-                yield scrapy.Request(url='{}{}'.format(config.url_movie_list, page),
+                yield scrapy.Request(url='{}{}'.format(config.URL_MOVIE_LIST, page),
                                      callback=self.parse_movie_list)
         else:
             self.logger.error('get movie list failed')
@@ -62,7 +62,7 @@ class SceneSpider(scrapy.Spider):
         if content['data'] and content['data']['movies']:
             for movie in content['data']['movies']:
                 # 获取电影列表中的电影
-                yield scrapy.Request(url='{}{}'.format(config.url_movie, movie['id']),
+                yield scrapy.Request(url='{}{}'.format(config.URL_MOVIE, movie['id']),
                                      callback=self.parse_movie)
                 # for place in movie['placeIds']:
                 #     获取电影中的地点
@@ -85,7 +85,7 @@ class SceneSpider(scrapy.Spider):
         content = json.loads(response.text)
         if content['data'] and content['data']['movie']:
             movie = content['data']['movie']
-            item = MovieItem()
+            item = Movie()
             item['id'] = movie['id']
             item['name_zh'] = movie['cname']
             item['name_en'] = movie['ename']

@@ -18,9 +18,9 @@ NEWSPIDER_MODULE = 'crawler.spiders'
 ROBOTSTXT_OBEY = False
 
 # 自定义随机请求头
-from crawler.configs import config
+from crawler.configs import default
 
-USER_AGENT = config.user_agent
+USER_AGENT = default.USER_AGENT
 
 # 日志
 # LOG_FILE = 'log_{}.txt'.format(datetime.date.today())
@@ -36,7 +36,7 @@ ROBOTSTXT_OBEY = False
 
 # 项目管道
 ITEM_PIPELINES = {
-    'crawler.pipelines.scene.MoviePipeline': 300,
+    'crawler.pipelines.scene.ScenePipeline': 300,
 }
 
 # ------------------------------------------------------------------------------------

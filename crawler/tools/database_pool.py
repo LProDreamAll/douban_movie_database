@@ -4,7 +4,7 @@
 # author: humingk
 # ----------------------
 import pymysql
-from crawler.configs import config
+from crawler.configs import default as config
 from DBUtils.PooledDB import PooledDB
 
 # 数据库连接池(PooledDB)
@@ -31,10 +31,10 @@ database_pool = PooledDB(
     # 如：0 = None = never, 1 = default = whenever it is requested,
     # 2 = when a cursor is created, 4 = when a query is executed, 7 = always
     ping=0,
-    host=config.database_host,
-    port=config.database_port,
-    user=config.database_user_name,
-    password=config.database_user_pwd,
-    database=config.database_name,
-    charset=config.database_charset
+    host=config.DB_HOST,
+    port=config.DB_PORT,
+    user=config.DB_USER,
+    password=config.DB_PASSWD,
+    database=config.DB_NAME,
+    charset=config.DB_CHARSET
 )

@@ -1,15 +1,16 @@
+# !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Define here the models for your scraped items
-#
-# See documentation in:
-# https://docs.scrapy.org/en/latest/topics/items.html
-
+# author: humingk
+# ----------------------
 import scrapy
 
-# 场景相关 start ------------------------------------------------------------------
+"""
+场景相关
 
-class SceneItem(scrapy.Item):
+"""
+
+class Scene(scrapy.Item):
     """
     场景
 
@@ -21,7 +22,7 @@ class SceneItem(scrapy.Item):
     happen_time = scrapy.Field()
 
 
-class SceneDetailItem(scrapy.Item):
+class SceneDetail(scrapy.Item):
     """
     场景详情
 
@@ -34,7 +35,7 @@ class SceneDetailItem(scrapy.Item):
     description = scrapy.Field()
 
 
-class PlaceItem(scrapy.Item):
+class Place(scrapy.Item):
     """
     地点
 
@@ -45,7 +46,7 @@ class PlaceItem(scrapy.Item):
     description = scrapy.Field()
 
 
-class MovieItem(scrapy.Item):
+class Movie(scrapy.Item):
     """
     电影
 
@@ -57,7 +58,7 @@ class MovieItem(scrapy.Item):
     description = scrapy.Field()
 
 
-class CelebrityItem(scrapy.Item):
+class Celebrity(scrapy.Item):
     """
     影人
 
@@ -66,6 +67,3 @@ class CelebrityItem(scrapy.Item):
     id_scene = scrapy.Field()
     name_zh = scrapy.Field()
     name_en = scrapy.Field()
-
-
-# 场景相关 end ------------------------------------------------------------------
