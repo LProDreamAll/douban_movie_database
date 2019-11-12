@@ -24,7 +24,10 @@ class ScenePipeline(object):
             'Celebrity': [],
             'Place': [],
             'Scene': [],
-            'SceneDetail': []
+            'SceneDetail': [],
+            'SceneDetailToCelebrityScene': [],
+            'ImagePlace': [],
+            'ImageSceneDetail': []
         }
 
     def process_item(self, item, spider):
@@ -52,7 +55,7 @@ class ScenePipeline(object):
         # 电影
         if table == 'Movie':
             self.execute(table=table,
-                         sql='insert into movie_scene(id,name_zh,name_en,start_year,description) values (%s,%s,%s,%s,%s)')
+                         sql='insert ignore into movie_scene(id,name_zh,name_en,start_year,description) values (%s,%s,%s,%s,%s)')
         elif table == 'Celebrity':
             pass
         elif table == 'Place':
@@ -60,6 +63,12 @@ class ScenePipeline(object):
         elif table == 'Scene':
             pass
         elif table == 'SceneDetail':
+            pass
+        elif table == 'SceneDetailToCelebrityScene':
+            pass
+        elif table == 'ImagePlace':
+            pass
+        elif table == 'ImageSceneDetail':
             pass
 
     def execute(self, table, sql):

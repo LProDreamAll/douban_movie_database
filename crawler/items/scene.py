@@ -10,6 +10,7 @@ import scrapy
 
 """
 
+
 class Scene(scrapy.Item):
     """
     场景
@@ -41,9 +42,20 @@ class Place(scrapy.Item):
 
     """
     id = scrapy.Field()
+    longitude = scrapy.Field()
+    latitude = scrapy.Field()
     name_zh = scrapy.Field()
     name_en = scrapy.Field()
+    name_other = scrapy.Field()
+    alias = scrapy.Field()
+    address_zh = scrapy.Field()
+    address_en = scrapy.Field()
     description = scrapy.Field()
+    phone = scrapy.Field()
+    url_poster = scrapy.Field()
+    url_earth = scrapy.Field()
+    url_satellite = scrapy.Field()
+    url_map = scrapy.Field()
 
 
 class Movie(scrapy.Item):
@@ -56,6 +68,7 @@ class Movie(scrapy.Item):
     name_en = scrapy.Field()
     start_year = scrapy.Field()
     description = scrapy.Field()
+    url_map = scrapy.Field()
 
 
 class Celebrity(scrapy.Item):
@@ -64,6 +77,33 @@ class Celebrity(scrapy.Item):
 
     """
     id = scrapy.Field()
-    id_scene = scrapy.Field()
     name_zh = scrapy.Field()
     name_en = scrapy.Field()
+
+
+class SceneDetailToCelebrityScene(scrapy.Item):
+    """
+    影人-场景详情
+
+    """
+    id_scene_detail = scrapy.Field()
+    id_celebrity_scene = scrapy.Field()
+
+
+class ImagePlace(scrapy.Item):
+    """
+    地点实景图
+
+    """
+    id_place = scrapy.Field()
+    url_image = scrapy.Field()
+    description = scrapy.Field()
+
+
+class ImageSceneDetail(scrapy.Item):
+    """
+    场景详情剧照图
+
+    """
+    id_scene_detail = scrapy.Field()
+    url_image = scrapy.Field()
