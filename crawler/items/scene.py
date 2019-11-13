@@ -18,7 +18,7 @@ class Scene(scrapy.Item):
     """
     id = scrapy.Field()
     id_movie_scene = scrapy.Field()
-    id_place = scrapy.Field()
+    id_place_scene = scrapy.Field()
     name_zh = scrapy.Field()
     happen_time = scrapy.Field()
 
@@ -31,17 +31,20 @@ class SceneDetail(scrapy.Item):
     id = scrapy.Field()
     id_scene = scrapy.Field()
     id_movie_scene = scrapy.Field()
-    id_place = scrapy.Field()
     happen_time = scrapy.Field()
     description = scrapy.Field()
 
 
-class Place(scrapy.Item):
+class PlaceScene(scrapy.Item):
     """
-    地点
+    场景地点
 
     """
     id = scrapy.Field()
+    id_continent_scene = scrapy.Field()
+    id_country_scene = scrapy.Field()
+    id_state_scene = scrapy.Field()
+    id_city_scene = scrapy.Field()
     longitude = scrapy.Field()
     latitude = scrapy.Field()
     name_zh = scrapy.Field()
@@ -51,6 +54,8 @@ class Place(scrapy.Item):
     address_zh = scrapy.Field()
     address_en = scrapy.Field()
     description = scrapy.Field()
+    area_zh = scrapy.Field()
+    area_en = scrapy.Field()
     phone = scrapy.Field()
     url_poster = scrapy.Field()
     url_earth = scrapy.Field()
@@ -58,9 +63,9 @@ class Place(scrapy.Item):
     url_map = scrapy.Field()
 
 
-class Movie(scrapy.Item):
+class MovieScene(scrapy.Item):
     """
-    电影
+    场景电影
 
     """
     id = scrapy.Field()
@@ -71,9 +76,9 @@ class Movie(scrapy.Item):
     url_map = scrapy.Field()
 
 
-class Celebrity(scrapy.Item):
+class CelebrityScene(scrapy.Item):
     """
-    影人
+    场景影人
 
     """
     id = scrapy.Field()
@@ -90,12 +95,12 @@ class SceneDetailToCelebrityScene(scrapy.Item):
     id_celebrity_scene = scrapy.Field()
 
 
-class ImagePlace(scrapy.Item):
+class ImagePlaceScene(scrapy.Item):
     """
-    地点实景图
+    场景地点实景图
 
     """
-    id_place = scrapy.Field()
+    id_place_scene = scrapy.Field()
     url_image = scrapy.Field()
     description = scrapy.Field()
 
@@ -107,3 +112,52 @@ class ImageSceneDetail(scrapy.Item):
     """
     id_scene_detail = scrapy.Field()
     url_image = scrapy.Field()
+
+
+class ContinentScene(scrapy.Item):
+    """
+    洲
+
+    """
+    id = scrapy.Field()
+    name_zh = scrapy.Field()
+    name_en = scrapy.Field()
+
+
+class CountryScene(scrapy.Item):
+    """
+    国家
+
+    """
+    id = scrapy.Field()
+    name_zh = scrapy.Field()
+    name_en = scrapy.Field()
+
+
+class StateScene(scrapy.Item):
+    """
+    州/省
+
+    """
+    id = scrapy.Field()
+    name_zh = scrapy.Field()
+    name_en = scrapy.Field()
+
+
+class CityScene(scrapy.Item):
+    """
+    城市
+
+    """
+    id = scrapy.Field()
+    name_zh = scrapy.Field()
+    name_en = scrapy.Field()
+
+
+class PlaceSceneToTypePlaceScene(scrapy.Item):
+    """
+    场景地点-场景地点类型
+
+    """
+    id_place_scene = scrapy.Field()
+    id_type_place_scene = scrapy.Field()

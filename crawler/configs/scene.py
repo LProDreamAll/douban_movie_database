@@ -17,3 +17,6 @@ NUM_MOVIE_LIST = 30
 URL_MOVIE = 'http://api.mocation.cc/api/movie/'
 # 地点链接 + 地点ID
 URL_PLACE = 'http://api.mocation.cc/api/place/'
+
+# 请求页面下载间隔时间
+DOWNLOAD_DELAY = 1

@@ -20,14 +20,19 @@ class ScenePipeline(object):
         self.spider_name = 'scene'
         # 待处理数据列表
         self.item_list = {
-            'Movie': [],
-            'Celebrity': [],
-            'Place': [],
             'Scene': [],
             'SceneDetail': [],
+            'PlaceScene': [],
+            'MovieScene': [],
+            'CelebrityScene': [],
             'SceneDetailToCelebrityScene': [],
-            'ImagePlace': [],
-            'ImageSceneDetail': []
+            'ImagePlaceScene': [],
+            'ImageSceneDetail': [],
+            'ContinentScene': [],
+            'CountryScene': [],
+            'StateScene': [],
+            'CityScene': [],
+            'PlaceSceneToTypePlaceScene': []
         }
 
     def process_item(self, item, spider):
@@ -53,23 +58,37 @@ class ScenePipeline(object):
         :return:
         """
         # 电影
-        if table == 'Movie':
-            self.execute(table=table,
-                         sql='insert ignore into movie_scene(id,name_zh,name_en,start_year,description) values (%s,%s,%s,%s,%s)')
-        elif table == 'Celebrity':
-            pass
-        elif table == 'Place':
-            pass
-        elif table == 'Scene':
-            pass
+        if table == 'Scene':
+            self.execute(table=table, sql='insert ignore into scene values (%s,%s,%s,%s,%s)')
         elif table == 'SceneDetail':
-            pass
+            self.execute(table=table, sql='insert ignore into scene_detail values (%s,%s,%s,%s,%s)')
+        elif table == 'PlaceScene':
+            self.execute(table=table,
+                         sql='insert ignore into place_scene values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)')
+        elif table == 'MovieScene':
+            self.execute(table=table,
+                         sql='insert ignore into movie_scene(id,name_zh,name_en,start_year,description,url_map) values (%s,%s,%s,%s,%s,%s)')
+        elif table == 'CelebrityScene':
+            self.execute(table=table,
+                         sql='insert ignore into celebrity_scene(id, name_zh, name_en) values (%s,%s,%s)')
         elif table == 'SceneDetailToCelebrityScene':
-            pass
-        elif table == 'ImagePlace':
-            pass
+            self.execute(table=table, sql='insert ignore into scene_detail_to_celebrity_scene values (%s,%s)')
+        elif table == 'ImagePlaceScene':
+            self.execute(table=table,
+                         sql='insert ignore into image_place_scene(id_place_scene, url_image, description) values (%s,%s,%s)')
         elif table == 'ImageSceneDetail':
-            pass
+            self.execute(table=table,
+                         sql='insert ignore into image_scene_detail(id_scene_detail, url_image) values (%s,%s)')
+        elif table == 'ContinentScene':
+            self.execute(table=table, sql='insert ignore into continent_scene values (%s,%s,%s)')
+        elif table == 'CountryScene':
+            self.execute(table=table, sql='insert ignore into country_scene values (%s,%s,%s)')
+        elif table == 'StateScene':
+            self.execute(table=table, sql='insert ignore into  state_scene values (%s,%s,%s)')
+        elif table == 'CityScene':
+            self.execute(table=table, sql='insert ignore into city_scene values (%s,%s,%s)')
+        elif table == 'PlaceSceneToTypePlaceScene':
+            self.execute(table=table, sql='insert ignore into place_scene_to_type_place_scene values (%s,%s)')
 
     def execute(self, table, sql):
         """

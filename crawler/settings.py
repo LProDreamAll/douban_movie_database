@@ -29,7 +29,9 @@ LOG_LEVEL = 'INFO'
 # LOG_STDOUT = True
 
 # 连续页面下载间隔时间
-DOWNLOAD_DELAY = 0.5
+from crawler.configs import scene
+
+DOWNLOAD_DELAY = scene.DOWNLOAD_DELAY
 
 # 忽略 robots.txt rules
 ROBOTSTXT_OBEY = False
@@ -37,6 +39,7 @@ ROBOTSTXT_OBEY = False
 # 项目管道
 ITEM_PIPELINES = {
     'crawler.pipelines.scene.ScenePipeline': 300,
+    'crawler.pipelines.scene.DoubanPipeline': 300,
 }
 
 # ------------------------------------------------------------------------------------
