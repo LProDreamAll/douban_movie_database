@@ -6,12 +6,12 @@
 import scrapy
 
 
-class DoubanSpider(scrapy.Spider):
+class MovieDoubanSpider(scrapy.Spider):
     """
     豆瓣电影相关
 
     """
-    name = 'douban'
+    name = 'movie_douban'
     allowed_domains = ['movie.douban.com']
 
     def start_requests(self):

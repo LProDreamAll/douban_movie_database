@@ -4,9 +4,23 @@
 # author: humingk
 # ----------------------
 import json
+import scrapy
 from scrapy_redis.spiders import RedisSpider
 from crawler.configs import scene as config
-from crawler.items.scene import *
+
+from crawler.items.scene import MovieScene
+from crawler.items.scene import Scene
+from crawler.items.scene import SceneDetail
+from crawler.items.scene import PlaceScene
+from crawler.items.scene import ImagePlaceScene
+from crawler.items.scene import ImageSceneDetail
+from crawler.items.scene import CelebrityScene
+from crawler.items.scene import SceneDetailToCelebrityScene
+from crawler.items.scene import ContinentScene
+from crawler.items.scene import CountryScene
+from crawler.items.scene import StateScene
+from crawler.items.scene import CityScene
+from crawler.items.scene import PlaceSceneToTypePlaceScene
 
 
 class SceneSpider(RedisSpider):
@@ -19,6 +33,11 @@ class SceneSpider(RedisSpider):
     # start_url存放容器改为redis list
     redis_key = 'scene:start_urls'
     allowed_domains = ['api.mocation.cc']
+    custom_settings = {
+        'ITEM_PIPELINES': {
+            'crawler.pipelines.scene.ScenePipeline': 300
+        }
+    }
 
     def start_requests(self):
         """
@@ -43,11 +62,10 @@ class SceneSpider(RedisSpider):
             for page in range(int(total / config.NUM_MOVIE_LIST) + 1):
                 yield scrapy.Request(url='{}{}'.format(config.URL_MOVIE_LIST, page),
                                      callback=self.parse_movie_list)
-                # ----------------------------------------------------------------------------------------------------------
+                # ----------------------------------------------------------------------------------------
                 break
         else:
             self.logger.error('get movie list failed')
-            return
 
     def parse_movie_list(self, response):
         """
@@ -62,18 +80,10 @@ class SceneSpider(RedisSpider):
                 # 请求电影列表中的电影
                 yield scrapy.Request(url='{}{}'.format(config.URL_MOVIE, movie['id']),
                                      callback=self.parse_movie)
-                # ---------------------------------------------------------------------------------------------------------
-                count = 0
                 for place in movie['placeIds']:
                     # 请求电影中的地点
                     yield scrapy.Request(url='{}{}'.format(config.URL_PLACE, place),
                                          callback=self.parse_place)
-                # ---------------------------------------------------------------------------------------------------------
-                count += 1
-                if count < 5:
-                    continue
-                elif count > 10:
-                    break
             self.logger.info(
                 'get movie list success ,page:{},total:{}'.format(response.url.split('=')[-1],
                                                                   content['data']['total']))
@@ -108,7 +118,6 @@ class SceneSpider(RedisSpider):
                 item_scene['id_place_scene'] = plot['placeId']
                 item_scene['name_zh'] = plot['sceneName']
                 item_scene['happen_time'] = plot['position']
-                self.logger.info('get scene success, id:{},name:{}'.format(item_scene['id'], item_scene['name_zh']))
                 yield item_scene
         else:
             self.logger.warning('get movie failed,possible id：{}'.format(response.url.split('/')[-1]))

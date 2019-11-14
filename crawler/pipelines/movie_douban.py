@@ -16,7 +16,7 @@ class MovieDoubanPipeline(object):
     def __init__(self):
         self.conn = database_pool.connection()
         self.cursor = self.conn.cursor()
-        self.spider_name = 'douban'
+        self.spider_name = 'movie_douban'
 
     def process_item(self, item, spider):
         if spider.name == self.spider_name:

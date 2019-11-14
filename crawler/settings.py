@@ -33,10 +33,11 @@ ROBOTSTXT_OBEY = False
 
 # 项目管道
 ITEM_PIPELINES = {
-    'crawler.pipelines.scene.ScenePipeline': 300,
-    'crawler.pipelines.movie_douban.MovieDoubanPipeline': 300,
+    # 'crawler.pipelines.scene.ScenePipeline': 300,
+    # 'crawler.pipelines.search.SearchPipeline': 400,
+    # 'crawler.pipelines.movie_douban.MovieDoubanPipeline': 500,
     # for redis
-    'scrapy_redis.pipelines.RedisPipeline': 400
+    'scrapy_redis.pipelines.RedisPipeline': 100
 }
 
 # 并发相关 -----------------------
@@ -79,14 +80,14 @@ HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 # 调度器
 SCHEDULER = 'scrapy_redis.scheduler.Scheduler'
 
-# 过滤器,确保所有蜘蛛通过redis共享相同的重复筛选器
+# 过滤器(去重),确保所有蜘蛛通过redis共享相同的重复筛选器
 DUPEFILTER_CLASS = 'scrapy_redis.dupefilter.RFPDupeFilter'
 
 # 请求调度使用优先队列
 SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.SpiderPriorityQueue'
 
 # 不清理redis队列，允许暂停/恢复爬网
-SCHEDULER_PERSIST = True
+# SCHEDULER_PERSIST = True
 
 # redis 主机+端口号+密码
 REDIS_HOST = '127.0.0.1'
