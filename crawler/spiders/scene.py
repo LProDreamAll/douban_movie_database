@@ -4,30 +4,20 @@
 # author: humingk
 # ----------------------
 import json
-import scrapy
+from scrapy_redis.spiders import RedisSpider
 from crawler.configs import scene as config
-from crawler.items.scene import MovieScene
-from crawler.items.scene import Scene
-from crawler.items.scene import SceneDetail
-from crawler.items.scene import PlaceScene
-from crawler.items.scene import ImagePlaceScene
-from crawler.items.scene import ImageSceneDetail
-from crawler.items.scene import CelebrityScene
-from crawler.items.scene import SceneDetailToCelebrityScene
-from crawler.items.scene import ContinentScene
-from crawler.items.scene import CountryScene
-from crawler.items.scene import StateScene
-from crawler.items.scene import CityScene
-from crawler.items.scene import PlaceSceneToTypePlaceScene
+from crawler.items.scene import *
 
 
-class SceneSpider(scrapy.Spider):
+class SceneSpider(RedisSpider):
     """
     关于电影的场景
 
     """
 
     name = 'scene'
+    # start_url存放容器改为redis list
+    redis_key = 'scene:start_urls'
     allowed_domains = ['api.mocation.cc']
 
     def start_requests(self):

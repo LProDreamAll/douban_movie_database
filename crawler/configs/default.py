@@ -18,8 +18,7 @@ DB_NAME = 'er'
 DB_CHARSET = 'utf8mb4'
 
 # 批量处理数据限制
-# batch_num = 100
-BATCH_NUM = 10
+batch_num = 100
 
 # 随机请求头
 

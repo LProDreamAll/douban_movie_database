@@ -28,11 +28,6 @@ LOG_LEVEL = 'INFO'
 # 其它输出是否加入日志
 # LOG_STDOUT = True
 
-# 连续页面下载间隔时间
-from crawler.configs import scene
-
-DOWNLOAD_DELAY = scene.DOWNLOAD_DELAY
-
 # 忽略 robots.txt rules
 ROBOTSTXT_OBEY = False
 
@@ -40,9 +35,67 @@ ROBOTSTXT_OBEY = False
 ITEM_PIPELINES = {
     'crawler.pipelines.scene.ScenePipeline': 300,
     'crawler.pipelines.movie_douban.MovieDoubanPipeline': 300,
+    # for redis
+    'scrapy_redis.pipelines.RedisPipeline': 400
 }
 
-# ------------------------------------------------------------------------------------
+# 并发相关 -----------------------
+
+# 连续页面下载间隔时间 s
+DOWNLOAD_DELAY = 1
+
+# 默认 Item 并发数：100
+CONCURRENT_ITEMS = 100
+
+# 默认 Request 并发数：16
+CONCURRENT_REQUESTS = 16
+
+# 默认每个域名的并发数：8
+CONCURRENT_REQUESTS_PER_DOMAIN = 8
+
+# 每个IP的最大并发数：0表示忽略
+CONCURRENT_REQUESTS_PER_IP = 0
+
+# 缓存 --------------------------
+
+# 打开缓存
+HTTPCACHE_ENABLED = True
+
+# 设置缓存过期时间（单位：秒）
+HTTPCACHE_EXPIRATION_SECS = 3600000
+
+# 缓存路径(默认为：.scrapy/httpcache)
+HTTPCACHE_DIR = 'crawler/spiders/httpcache'
+
+# 忽略的状态码
+HTTPCACHE_IGNORE_HTTP_CODES = []
+
+# 缓存模式(文件缓存)
+HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+# redis ------------------------
+# https://github.com/rmax/scrapy-redis
+
+# 调度器
+SCHEDULER = 'scrapy_redis.scheduler.Scheduler'
+
+# 过滤器,确保所有蜘蛛通过redis共享相同的重复筛选器
+DUPEFILTER_CLASS = 'scrapy_redis.dupefilter.RFPDupeFilter'
+
+# 请求调度使用优先队列
+SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.SpiderPriorityQueue'
+
+# 不清理redis队列，允许暂停/恢复爬网
+SCHEDULER_PERSIST = True
+
+# redis 主机+端口号+密码
+REDIS_HOST = '127.0.0.1'
+REDIS_PORT = 6379
+REDIS_PARAMS = {
+    'password': '1233'
+}
+
+# ----------------------------------------------------------------------------------------------------
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'crawler (+http://www.yourdomain.com)'
