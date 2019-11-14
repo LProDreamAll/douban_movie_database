@@ -39,7 +39,7 @@ ROBOTSTXT_OBEY = False
 # 项目管道
 ITEM_PIPELINES = {
     'crawler.pipelines.scene.ScenePipeline': 300,
-    'crawler.pipelines.scene.DoubanPipeline': 300,
+    'crawler.pipelines.movie_douban.MovieDoubanPipeline': 300,
 }
 
 # ------------------------------------------------------------------------------------

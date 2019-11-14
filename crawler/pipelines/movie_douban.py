@@ -7,7 +7,7 @@ from crawler.tools.database_pool import database_pool
 from crawler.configs import default as config
 
 
-class DoubanPipeline(object):
+class MovieDoubanPipeline(object):
     """
     豆瓣电影相关
 
