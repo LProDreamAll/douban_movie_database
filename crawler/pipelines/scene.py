@@ -32,6 +32,9 @@ class ScenePipeline(Pipeline):
             'CelebrityScene': {
                 'sql': 'insert ignore into celebrity_scene(id, name_zh, name_en) values (%s,%s,%s)'
             },
+            'MovieSceneToCelebrityScene': {
+                'sql': 'insert ignore into movie_scene_to_celebrity_scene values (%s,%s)'
+            },
             'SceneDetailToCelebrityScene': {
                 'sql': 'insert ignore into scene_detail_to_celebrity_scene values (%s,%s)'
             },

@@ -17,11 +17,6 @@ NEWSPIDER_MODULE = 'crawler.spiders'
 # 忽略 robots.txt rules
 ROBOTSTXT_OBEY = False
 
-# 自定义随机请求头
-from crawler.configs import default
-
-USER_AGENT = default.USER_AGENT
-
 # 日志
 # LOG_FILE = 'log_{}.txt'.format(datetime.date.today())
 LOG_LEVEL = 'INFO'
@@ -40,10 +35,25 @@ ITEM_PIPELINES = {
     'scrapy_redis.pipelines.RedisPipeline': 100
 }
 
+# cookie -----------------------
+
+# True:允许发送cookie False:禁止发送cookie
+COOKIES_ENABLED = True
+
+# debug 信息
+# COOKIES_DEBUG = True
+
+# 随机请求头 中间件
+DOWNLOADER_MIDDLEWARES = {
+    'crawler.middlewares.RandomUserAgentMiddleWare': 543,
+    # 关闭scrapy自带的代理Middleware
+    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+}
+
 # 并发相关 -----------------------
 
 # 连续页面下载间隔时间 s
-DOWNLOAD_DELAY = 1
+DOWNLOAD_DELAY = 3
 
 # 默认 Item 并发数：100
 CONCURRENT_ITEMS = 100
@@ -59,8 +69,9 @@ CONCURRENT_REQUESTS_PER_IP = 0
 
 # 缓存 --------------------------
 
-# 打开缓存
-HTTPCACHE_ENABLED = True
+# scrapy缓存 True:允许缓存，每次使用缓存 False:不允许缓存，每次不使用缓存
+# HTTPCACHE_ENABLED = True
+HTTPCACHE_ENABLED = False
 
 # 设置缓存过期时间（单位：秒）
 HTTPCACHE_EXPIRATION_SECS = 3600000
@@ -76,6 +87,10 @@ HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # redis ------------------------
 # https://github.com/rmax/scrapy-redis
+
+# redis缓存 True:不允许缓存，自动清理keys False:允许缓存，不自动清理
+SCHEDULER_FLUSH_ON_START = True
+# SCHEDULER_FLUSH_ON_START = False
 
 # 调度器
 SCHEDULER = 'scrapy_redis.scheduler.Scheduler'

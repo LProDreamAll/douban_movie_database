@@ -86,6 +86,15 @@ class CelebrityScene(scrapy.Item):
     name_en = scrapy.Field()
 
 
+class MovieSceneToCelebrityScene(scrapy.Item):
+    """
+    场景电影-场景影人
+
+    """
+    id_movie_scene = scrapy.Field()
+    id_celebrity_scene = scrapy.Field()
+
+
 class SceneDetailToCelebrityScene(scrapy.Item):
     """
     影人-场景详情

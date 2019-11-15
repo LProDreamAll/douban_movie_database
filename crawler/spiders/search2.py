@@ -33,10 +33,10 @@ class SearchSpider(RedisSpider):
 
     """
 
-    name = 'search'
+    name = 'search2'
     # start_url存放容器改为redis list
-    redis_key = 'search:start_urls'
-    allowed_domains = ['search.douban.com']
+    redis_key = 'search2:start_urls'
+    allowed_domains = ['movie.douban.com']
     custom_settings = {
         'ITEM_PIPELINES': {
             'crawler.pipelines.search.SearchPipeline': 300
@@ -63,27 +63,27 @@ class SearchSpider(RedisSpider):
         if self.type == self.type_movie_imdb:
             self.cursor.execute('select id,start_year from movie_imdb')
             for id, start_year in self.cursor.fetchall():
-                yield scrapy.Request(url=config.URL_SEARCH_MOVIE_DOUBAN + 'tt' + '%07d' % id,
+                yield scrapy.Request(url=config.URL_SEARCH_TIPS_MOVIE_DOUBAN + 'tt' + '%07d' % id,
                                      meta={'id': id, 'start_year': start_year}, cookies=self.get_cookie_douban(),
+                                     # meta={'id': id, 'start_year': start_year},
                                      callback=self.parse)
         elif self.type == self.type_movie_scene:
             self.cursor.execute('select id,name_zh,start_year from movie_scene where id_movie_douban=0')
             for id, name_zh, start_year in self.cursor.fetchall():
-                yield scrapy.Request(url=config.URL_SEARCH_MOVIE_DOUBAN + name_zh,
-                                     meta={'id': id, 'start_year': start_year}, cookies=self.get_cookie_douban(),
+                yield scrapy.Request(url=config.URL_SEARCH_TIPS_MOVIE_DOUBAN + name_zh,
+                                     meta={'id': id, 'start_year': start_year},
                                      callback=self.parse)
         elif self.type == self.type_movie_resource:
             pass
         elif self.type == self.type_celebrity_imdb:
             self.cursor.execute('select id from celebrity_imdb')
             for id in self.cursor.fetchall():
-                yield scrapy.Request(url=config.URL_SEARCH_MOVIE_DOUBAN + 'nm' + '%07d' % id, meta={'id': id},
-                                     cookies=self.get_cookie_douban(), callback=self.parse)
+                yield scrapy.Request(url=config.URL_SEARCH_TIPS_MOVIE_DOUBAN + 'nm' + '%07d' % id, meta={'id': id},
+                                     callback=self.parse)
         elif self.type == self.type_celebrity_scene:
             self.cursor.execute('select id,name_zh from celebrity_scene where id_celebrity_douban=0')
             for id, name_zh in self.cursor.fetchall():
-                yield scrapy.Request(url=config.URL_SEARCH_MOVIE_DOUBAN + name_zh, meta={'id': id},
-                                     cookies=self.get_cookie_douban(), callback=self.parse)
+                yield scrapy.Request(url=config.URL_SEARCH_TIPS_MOVIE_DOUBAN + name_zh, meta={'id': id}, callback=self.parse)
 
     def parse(self, response):
         """
@@ -92,6 +92,7 @@ class SearchSpider(RedisSpider):
         :param response:
         :return:
         """
+        content = json.loads(response.text)
         print('--------------------------------------------------------------')
         print(response.url)
         print('-----')
@@ -99,16 +100,11 @@ class SearchSpider(RedisSpider):
         print('-----')
         print(response.headers)
         print('-----')
-
+        print(content)
         # 标记是否取得结果 True：取得结果 False:未取得结果
         flag = False
-        content = response.xpath('//div[@class="item-root"]')
         if content:
             for result in content:
-
-                # 改为搜索页面
-                # 。。。
-
                 # 当前任务为电影类型 and 搜索结果为电影类型 and 上映时间在精确度范围内
                 if self.type.split('_')[0] == 'movie' and result['type'] == 'movie' and abs(
                         int(result['year']) - response.meta['start_year']) <= config.ACCURACY_RELEASE_TIME:

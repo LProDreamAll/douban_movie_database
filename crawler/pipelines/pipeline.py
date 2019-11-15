@@ -12,6 +12,7 @@
 
 from crawler.configs import default as config
 from crawler.tools.database_pool import database_pool
+import warnings
 
 
 class Pipeline(object):
@@ -39,7 +40,8 @@ class Pipeline(object):
     def close_spider(self, spider):
         # 批量处理待处理数据列表的剩余部分
         for table in self.item_dict:
-            self.execute(table)
+            if self.item_dict[table]['data']:
+                self.execute(table)
         self.conn.close()
 
     def execute(self, table):
@@ -49,6 +51,7 @@ class Pipeline(object):
         :param table: item_dict中的表名
         :return:
         """
+        warnings.filterwarnings("ignore")
         self.cursor.executemany(self.item_dict[table]['sql'], self.item_dict[table]['data'])
         self.conn.commit()
         self.item_dict[table]['data'].clear()

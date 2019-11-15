@@ -15,6 +15,7 @@ from crawler.items.scene import PlaceScene
 from crawler.items.scene import ImagePlaceScene
 from crawler.items.scene import ImageSceneDetail
 from crawler.items.scene import CelebrityScene
+from crawler.items.scene import MovieSceneToCelebrityScene
 from crawler.items.scene import SceneDetailToCelebrityScene
 from crawler.items.scene import ContinentScene
 from crawler.items.scene import CountryScene
@@ -65,7 +66,7 @@ class SceneSpider(RedisSpider):
                 # ----------------------------------------------------------------------------------------
                 break
         else:
-            self.logger.error('get movie list failed')
+            self.logger.warning('get movie list failed')
 
     def parse_movie_list(self, response):
         """
@@ -76,6 +77,8 @@ class SceneSpider(RedisSpider):
         """
         content = json.loads(response.text)
         if content['data'] and content['data']['movies']:
+            # ----------------------------------------------------------------------------------------
+            count = 0
             for movie in content['data']['movies']:
                 # 请求电影列表中的电影
                 yield scrapy.Request(url='{}{}'.format(config.URL_MOVIE, movie['id']),
@@ -84,6 +87,10 @@ class SceneSpider(RedisSpider):
                     # 请求电影中的地点
                     yield scrapy.Request(url='{}{}'.format(config.URL_PLACE, place),
                                          callback=self.parse_place)
+                # ----------------------------------------------------------------------------------------
+                count += 1
+                if count >= 10:
+                    break
             self.logger.info(
                 'get movie list success ,page:{},total:{}'.format(response.url.split('=')[-1],
                                                                   content['data']['total']))
@@ -174,6 +181,11 @@ class SceneSpider(RedisSpider):
                             item_celebrity['name_zh'] = person['cname']
                             item_celebrity['name_en'] = person['ename']
                             yield item_celebrity
+                            # 场景电影-人物 对应关系
+                            item_movie_to_celebrity = MovieSceneToCelebrityScene()
+                            item_movie_to_celebrity['id_movie_scene'] = scene['movieId']
+                            item_movie_to_celebrity['id_celebrity_scene'] = item_celebrity['id']
+                            yield item_movie_to_celebrity
                             # 场景详情-人物 对应关系
                             item_celebrity_to_scene_detail = SceneDetailToCelebrityScene()
                             item_celebrity_to_scene_detail['id_celebrity_scene'] = item_celebrity['id']

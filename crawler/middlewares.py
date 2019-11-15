@@ -4,9 +4,29 @@
 #
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-
 from scrapy import signals
+from fake_useragent import UserAgent
 
+
+class RandomUserAgentMiddleWare(object):
+    """
+    随机请求头中间件
+
+    """
+
+    def __init__(self, crawler):
+        super(RandomUserAgentMiddleWare, self).__init__()
+        self.user_agent = UserAgent()
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(crawler)
+
+    def process_request(self, request, spider):
+        request.headers.setdefault('User-Agent', self.user_agent.random)
+
+
+# ------------------------------------------------------------------------------------------------
 
 class CrawlerSpiderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,
