@@ -5,7 +5,8 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 from scrapy import signals
-from fake_useragent import UserAgent
+import random
+from crawler.configs import default as config
 
 
 class RandomUserAgentMiddleWare(object):
@@ -16,14 +17,14 @@ class RandomUserAgentMiddleWare(object):
 
     def __init__(self, crawler):
         super(RandomUserAgentMiddleWare, self).__init__()
-        self.user_agent = UserAgent()
+        self.user_agent_list = config.USER_AGENT_LIST
 
     @classmethod
     def from_crawler(cls, crawler):
         return cls(crawler)
 
     def process_request(self, request, spider):
-        request.headers.setdefault('User-Agent', self.user_agent.random)
+        request.headers.setdefault('User-Agent', random.choice(self.user_agent_list))
 
 
 # ------------------------------------------------------------------------------------------------

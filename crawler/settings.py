@@ -53,7 +53,7 @@ DOWNLOADER_MIDDLEWARES = {
 # 并发相关 -----------------------
 
 # 连续页面下载间隔时间 s
-DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 1
 
 # 默认 Item 并发数：100
 CONCURRENT_ITEMS = 100
@@ -110,6 +110,7 @@ REDIS_PORT = 6379
 REDIS_PARAMS = {
     'password': '1233'
 }
+
 
 # ----------------------------------------------------------------------------------------------------
 
