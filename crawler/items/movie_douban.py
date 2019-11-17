@@ -15,13 +15,23 @@ class MovieDouban(scrapy.Item):
     id = scrapy.Field()
     id_type_video = scrapy.Field()
     id_movie_imdb = scrapy.Field()
+    start_year = scrapy.Field()
     name_zh = scrapy.Field()
-    name_en = scrapy.Field()
-    name_other = scrapy.Field()
-    name_alias = scrapy.Field()
+    name_origin = scrapy.Field()
     runtime = scrapy.Field()
-    set_sum = scrapy.Field()
     url_poster = scrapy.Field()
+
+
+class AliasMovieDouban(scrapy.Item):
+    id_movie_douban = scrapy.Field()
+    name_alias = scrapy.Field()
+
+
+class MovieDoubanToCelebrityDouban(scrapy.Item):
+    id_movie_douban = scrapy.Field()
+    id_celebrity_douban = scrapy.Field()
+    id_profession = scrapy.Field()
+    sort = scrapy.Field()
 
 
 class RateMovieDouban(scrapy.Item):
@@ -111,11 +121,5 @@ class CelebrityDouban(scrapy.Item):
 
 
 class CelebrityDoubanToProfession(scrapy.Item):
-    id_celebrity_douban = scrapy.Field()
-    id_profession = scrapy.Field()
-
-
-class MovieDoubanToCelebrityDouban(scrapy.Item):
-    id_movie_douban = scrapy.Field()
     id_celebrity_douban = scrapy.Field()
     id_profession = scrapy.Field()
