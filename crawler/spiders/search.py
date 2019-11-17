@@ -6,6 +6,7 @@
 
 import random
 import re
+import execjs
 import string
 import scrapy
 from scrapy_redis.spiders import RedisSpider
@@ -52,6 +53,9 @@ class SearchSpider(RedisSpider):
         self.type_movie_scene = 'movie_scene'
         self.type_celebrity_scene = 'celebrity_scene'
         self.type_movie_resource = 'movie_resource'
+        # 编译JS解密代码,通过call调用
+        self.decrypt_js = execjs.compile(
+            open('crawler/tools/decrypt_search_douban.js', mode='r', encoding='gbk', errors='ignore').read())
 
     def start_requests(self):
         """
@@ -91,29 +95,27 @@ class SearchSpider(RedisSpider):
         :param response:
         :return:
         """
-        print('--------------------------------------------------------------')
-        print(response.url)
-
         # 标记是否取得结果 True：取得结果 False:未取得结果
         flag = False
-        title_list = response.xpath('//div[@class="item-root"]//div[@class="title"]/a')
-        print(title_list)
+        # 解密搜索结果中的window.__DATA__
+        data_encrypted = re.search('window.__DATA__ = "([^"]*)"',
+                                   response.xpath('/html/body/script[6]/text()').get()).group(1)
+        title_list = self.decrypt_js.call('decrypt', data_encrypted)['payload']['items']
         if title_list:
             for title in title_list:
-                text = title.xpath('text()').get()
-                href = title.xpath('@href').get()
-                print(text)
-                print(href)
-                # 标题类型 https://movie.douban.com/s... 第25个字符 s:movie类型 c:celebrity类型
-                title_type = href[25]
-                # 标题时间 括号中的年份 celebrity类型则为空
-                title_year = re.findall(r'[(](.*?)[)]', text)[-1]
+                # 标题类型 search_common：影人 search_subject：电影
+                title_type = title['tpl_name']
+                if title_type not in ('search_common', 'search_subject'):
+                    continue
                 # 标题名称
-                title_name = text.split(' ')[0]
+                title_name = title['title'].split(' ')[0]
+                # 标题时间 括号中的年份 celebrity类型则为空
+                title_year = re.search('[(](\d+)[)]', title['title']).group(
+                    1) if title_type == 'search_subject' else None
                 # 标题ID
-                title_id = re.findall(r'\d+', href)[-1]
+                title_id = title['id']
                 # 当前任务为电影类型 and 搜索结果为电影类型 and 上映时间在精确度范围内
-                if self.type.split('_')[0] == 'movie' and title_type == 's' and abs(
+                if self.type.split('_')[0] == 'movie' and title_type == 'search_subject' and abs(
                         int(title_year) - response.meta['start_year']) <= config.ACCURACY_RELEASE_TIME:
                     if self.type == self.type_movie_imdb:
                         item_movie_douban = MovieDouban()
@@ -130,7 +132,7 @@ class SearchSpider(RedisSpider):
                         pass
                     flag = True
                 # 当前任务为影人类型 and 搜索结果为影人类型
-                elif self.type.split('_')[0] == 'celebrity' and title_type == 'c':
+                elif self.type.split('_')[0] == 'celebrity' and title_type == 'search_common':
                     if self.type == self.type_celebrity_imdb:
                         item_celebrity_douban = CelebrityDouban()
                         item_celebrity_douban['id'] = title_id
@@ -144,9 +146,8 @@ class SearchSpider(RedisSpider):
                     flag = True
                 # 找到最佳匹配结果，即可跳出
                 if flag:
-                    self.logger.info(
-                        'get search list success,id:{},name:{},type:{}'.format(response.meta['id'], title_name,
-                                                                               self.type))
+                    self.logger.info('get search list success,id:{},name:{},type:{}'
+                                     .format(response.meta['id'], title_name, self.type))
                     break
         if not flag:
             # 搜索失败，部分类型标记为已搜索，避免重复搜索
