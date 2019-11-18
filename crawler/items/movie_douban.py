@@ -20,6 +20,10 @@ class MovieDouban(scrapy.Item):
     name_origin = scrapy.Field()
     runtime = scrapy.Field()
     url_poster = scrapy.Field()
+    summary = scrapy.Field()
+    have_seen = scrapy.Field()
+    wanna_seen = scrapy.Field()
+    is_updated = scrapy.Field()
 
 
 class AliasMovieDouban(scrapy.Item):
@@ -34,6 +38,11 @@ class MovieDoubanToCelebrityDouban(scrapy.Item):
     sort = scrapy.Field()
 
 
+class MovieDoubanToTypeMovie(scrapy.Item):
+    id_movie_douban = scrapy.Field()
+    id_type_movie = scrapy.Field()
+
+
 class RateMovieDouban(scrapy.Item):
     id = scrapy.Field()
     score = scrapy.Field()
@@ -44,6 +53,27 @@ class RateMovieDouban(scrapy.Item):
     score4 = scrapy.Field()
     score5 = scrapy.Field()
 
+
+class TagMovie(scrapy.Item):
+    id_movie_douban = scrapy.Field()
+    name_zh = scrapy.Field()
+
+
+class AwardMovie(scrapy.Item):
+    id = scrapy.Field()
+    name_zh = scrapy.Field()
+
+
+class MovieDoubanToAwardMovie(scrapy.Item):
+    id_movie_douban = scrapy.Field()
+    id_award_movie = scrapy.Field()
+    id_celebrity_douban = scrapy.Field()
+    type_award = scrapy.Field()
+    award_th = scrapy.Field()
+    is_nominated = scrapy.Field()
+
+
+# -------------------
 
 class CommentMovieDouban(scrapy.Item):
     id = scrapy.Field()
@@ -57,25 +87,6 @@ class ReviewMovieDouban(scrapy.Item):
     agree_vote = scrapy.Field()
     create_date = scrapy.Field()
     content = scrapy.Field()
-
-
-class MovieDoubanToTypeMovie(scrapy.Item):
-    id_movie_douban = scrapy.Field()
-    id_type_movie = scrapy.Field()
-
-
-class MovieDoubanToTagMovie(scrapy.Item):
-    id_movie_douban = scrapy.Field()
-    id_tag_movie = scrapy.Field()
-
-
-class MovieDoubanToAwardMovie(scrapy.Item):
-    id_movie_douban = scrapy.Field()
-    id_award_movie = scrapy.Field()
-    id_type_award = scrapy.Field()
-    id_celebrity_douban = scrapy.Field()
-    award_th = scrapy.Field()
-    gain_year = scrapy.Field()
 
 
 class MovieDoubanToAreaDouban(scrapy.Item):
@@ -118,8 +129,3 @@ class CelebrityDouban(scrapy.Item):
     birth_date = scrapy.Field()
     description = scrapy.Field()
     url_portrait = scrapy.Field()
-
-
-class CelebrityDoubanToProfession(scrapy.Item):
-    id_celebrity_douban = scrapy.Field()
-    id_profession = scrapy.Field()

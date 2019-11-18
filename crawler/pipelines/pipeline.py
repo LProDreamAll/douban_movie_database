@@ -52,6 +52,9 @@ class Pipeline(object):
         :return:
         """
         warnings.filterwarnings("ignore")
+        print('-----------------------')
+        print(self.item_dict[table]['sql'])
+        print(self.item_dict[table]['data'])
         self.cursor.executemany(self.item_dict[table]['sql'], self.item_dict[table]['data'])
         self.conn.commit()
         self.item_dict[table]['data'].clear()
