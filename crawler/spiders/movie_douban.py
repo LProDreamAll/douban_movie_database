@@ -3,11 +3,10 @@
 
 # author: humingk
 # ----------------------
-import random
 import re
-import string
 import scrapy
 from crawler.tools.database_pool import database_pool
+from crawler.configs import default
 from crawler.configs import movie_douban as config
 from scrapy_redis.spiders import RedisSpider
 
@@ -16,8 +15,8 @@ from crawler.items.movie_douban import AliasMovieDouban
 from crawler.items.movie_douban import MovieDoubanToCelebrityDouban
 from crawler.items.movie_douban import MovieDoubanToTypeMovie
 from crawler.items.movie_douban import RateMovieDouban
-from crawler.items.movie_douban import TagMovie
-from crawler.items.movie_douban import AwardMovie
+from crawler.items.movie import TagMovie
+from crawler.items.movie import AwardMovie
 from crawler.items.movie_douban import MovieDoubanToAwardMovie
 
 
@@ -45,7 +44,7 @@ class MovieDoubanSpider(RedisSpider):
         self.cursor.execute('select id from movie_douban where is_updated=0')
         for id, in self.cursor.fetchall():
             yield scrapy.Request(url="{}{}/".format(config.URL_MOVIE_DOUBAN, id),
-                                 cookies=self.get_cookie_douban(),
+                                 cookies=default.get_cookie_douban(),
                                  meta={'id': id}, callback=self.parse)
 
     def parse(self, response):
@@ -75,7 +74,8 @@ class MovieDoubanSpider(RedisSpider):
             item_movie['name_origin'] = re.search('[\u4e00-\u9fff()\d\s]*(.*)',
                                                   title).group(1).strip() if title is not None else ''
             item_movie['runtime'] = info.xpath('span[@property="v:runtime"]/@content').get()
-            item_movie['url_poster'] = response.xpath('//a[@class="nbgnbg"]/img/@src').get()
+            item_movie['url_poster'] = re.search('p(\d+)',
+                                                 response.xpath('//a[@class="nbgnbg"]/img/@src').get()).group(1)
             item_movie['summary'] = ''.join(response.xpath('//span[@property="v:summary"]/text()').getall())
             see_list = response.xpath('//div[@class="subject-others-interests-ft"]/a/text()').getall()
             item_movie['have_seen'] = 0
@@ -115,8 +115,8 @@ class MovieDoubanSpider(RedisSpider):
                 # 主演
                 if celebrity.xpath('@rel').get() == 'v:starring':
                     item_movie_to_celebrity['id_profession'] = 4
-                    item_movie_to_celebrity['sort'] = count
                     count += 1
+                    item_movie_to_celebrity['sort'] = count
                     print('celebrity --------------------------------------')
                     print(item_movie_to_celebrity)
                     yield item_movie_to_celebrity
@@ -187,11 +187,3 @@ class MovieDoubanSpider(RedisSpider):
             self.logger.info('get douban movie success,id:{}'.format(movie_id))
         else:
             self.logger.warning('get douban movie failed,id:{}'.format(movie_id))
-
-    def get_cookie_douban(self):
-        """
-        豆瓣cookie随机生成
-
-        :return:字典形式的cookie
-        """
-        return {'Cookie': 'bid=%s' % ''.join(random.sample(string.ascii_letters + string.digits, 11))}

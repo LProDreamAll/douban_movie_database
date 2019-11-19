@@ -4,7 +4,7 @@
 # author: humingk
 # ----------------------
 
-# 豆瓣电影 + subject ID
+# 豆瓣电影 + ID + /
 URL_MOVIE_DOUBAN = 'https://movie.douban.com/subject/'
 
 # 电影类型 下标即为其ID

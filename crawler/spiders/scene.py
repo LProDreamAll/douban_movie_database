@@ -93,10 +93,11 @@ class SceneSpider(RedisSpider):
                     break
             self.logger.info(
                 'get scene movie list success ,page:{},total:{}'.format(response.url.split('=')[-1],
-                                                                  content['data']['total']))
+                                                                        content['data']['total']))
         else:
             self.logger.warning(
-                'get scene movie list failed ,page:{},total:{}'.format(response.url.split('=')[-1], content['data']['total']))
+                'get scene movie list failed ,page:{},total:{}'.format(response.url.split('=')[-1],
+                                                                       content['data']['total']))
 
     def parse_movie(self, response):
         """

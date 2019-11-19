@@ -4,13 +4,12 @@
 # author: humingk
 # ----------------------
 
-import random
 import re
 import execjs
-import string
 import scrapy
 from scrapy_redis.spiders import RedisSpider
 from crawler.tools.database_pool import database_pool
+from crawler.configs import default
 from crawler.configs import search as config
 
 from crawler.items.search import MovieDouban
@@ -67,13 +66,13 @@ class SearchSpider(RedisSpider):
             self.cursor.execute('select id,start_year from movie_imdb')
             for id, start_year in self.cursor.fetchall():
                 yield scrapy.Request(url=config.URL_SEARCH_MOVIE_DOUBAN + 'tt' + '%07d' % id,
-                                     meta={'id': id, 'start_year': start_year}, cookies=self.get_cookie_douban(),
+                                     meta={'id': id, 'start_year': start_year}, cookies=default.get_cookie_douban(),
                                      callback=self.parse)
         elif self.type == self.type_movie_scene:
             self.cursor.execute('select id,name_zh,start_year from movie_scene where id_movie_douban=0')
             for id, name_zh, start_year in self.cursor.fetchall():
                 yield scrapy.Request(url=config.URL_SEARCH_MOVIE_DOUBAN + name_zh,
-                                     meta={'id': id, 'start_year': start_year}, cookies=self.get_cookie_douban(),
+                                     meta={'id': id, 'start_year': start_year}, cookies=default.get_cookie_douban(),
                                      callback=self.parse)
         elif self.type == self.type_movie_resource:
             pass
@@ -81,12 +80,12 @@ class SearchSpider(RedisSpider):
             self.cursor.execute('select id from celebrity_imdb')
             for id in self.cursor.fetchall():
                 yield scrapy.Request(url=config.URL_SEARCH_MOVIE_DOUBAN + 'nm' + '%07d' % id, meta={'id': id},
-                                     cookies=self.get_cookie_douban(), callback=self.parse)
+                                     cookies=default.get_cookie_douban(), callback=self.parse)
         elif self.type == self.type_celebrity_scene:
             self.cursor.execute('select id,name_zh from celebrity_scene where id_celebrity_douban=0')
             for id, name_zh in self.cursor.fetchall():
                 yield scrapy.Request(url=config.URL_SEARCH_MOVIE_DOUBAN + name_zh, meta={'id': id},
-                                     cookies=self.get_cookie_douban(), callback=self.parse)
+                                     cookies=default.get_cookie_douban(), callback=self.parse)
 
     def parse(self, response):
         """
@@ -162,11 +161,3 @@ class SearchSpider(RedisSpider):
                 item_celebrity_scene['id'] = response.meta['id']
                 yield item_celebrity_scene
             self.logger.warning('get search list failed,id:{},type:{}'.format(response.meta['id'], self.type))
-
-    def get_cookie_douban(self):
-        """
-        豆瓣cookie随机生成
-
-        :return:字典形式的cookie
-        """
-        return {'Cookie': 'bid=%s' % ''.join(random.sample(string.ascii_letters + string.digits, 11))}

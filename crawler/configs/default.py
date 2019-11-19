@@ -9,6 +9,8 @@
 """
 
 # mysql相关
+import random
+import string
 
 DB_USER = 'root'
 DB_PASSWD = '1233'
@@ -20,6 +22,15 @@ DB_CHARSET = 'utf8mb4'
 # 批量处理数据限制
 # BATCH_NUM = 100
 BATCH_NUM = 2
+
+
+def get_cookie_douban():
+    """
+    豆瓣cookie随机生成
+
+    :return:字典形式的cookie
+    """
+    return {'Cookie': 'bid=%s' % ''.join(random.sample(string.ascii_letters + string.digits, 11))}
 
 
 # 随机请求头列表

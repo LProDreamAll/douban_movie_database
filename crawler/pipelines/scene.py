@@ -39,10 +39,10 @@ class ScenePipeline(Pipeline):
                 'sql': 'insert ignore into scene_detail_to_celebrity_scene values (%s,%s)'
             },
             'ImagePlaceScene': {
-                'sql': 'insert ignore into image_place_scene(id_place_scene, url_image, description) values (%s,%s,%s)'
+                'sql': 'insert into image_place_scene(id_place_scene, url_image, description) values (%s,%s,%s)'
             },
             'ImageSceneDetail': {
-                'sql': 'insert ignore into image_scene_detail(id_scene_detail, url_image) values (%s,%s)'
+                'sql': 'insert into image_scene_detail(id_scene_detail, url_image) values (%s,%s)'
             },
             'ContinentScene': {
                 'sql': 'insert ignore into continent_scene values (%s,%s,%s)'

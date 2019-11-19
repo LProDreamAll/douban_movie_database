@@ -11,34 +11,11 @@
 import scrapy
 
 
-class TypeVideo(scrapy.Item):
-    id = scrapy.Field()
+class TagMovie(scrapy.Item):
+    id_movie_douban = scrapy.Field()
     name_zh = scrapy.Field()
-    name_en = scrapy.Field()
 
 
 class AwardMovie(scrapy.Item):
     id = scrapy.Field()
     name_zh = scrapy.Field()
-
-
-class TypeAward(scrapy.Item):
-    id = scrapy.Field()
-    name_zh = scrapy.Field()
-
-
-class TypeMovie(scrapy.Item):
-    id = scrapy.Field()
-    name_zh = scrapy.Field()
-    name_en = scrapy.Field()
-
-
-class TagMovie(scrapy.Item):
-    id = scrapy.Field()
-    name_zh = scrapy.Field()
-    name_en = scrapy.Field()
-
-class Profession(scrapy.Item):
-    id = scrapy.Field()
-    name_zh = scrapy.Field()
-    name_en = scrapy.Field()

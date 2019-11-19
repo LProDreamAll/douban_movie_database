@@ -39,7 +39,10 @@ class MovieDoubanPipeline(Pipeline):
             },
             'MovieDoubanToAwardMovie': {
                 'sql': 'insert ignore into movie_douban_to_award_movie values (%s,%s,%s,%s,%s,%s)'
-            }
+            },
+            'ImageMovieDouban': {
+                'sql': 'insert ignore into image_movie_douban values (%s,%s,%s,%s,%s)'
+            },
         }
         # 每个表添加data列表
         for table in self.item_dict.keys():
