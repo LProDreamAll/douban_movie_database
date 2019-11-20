@@ -83,6 +83,12 @@ class ImageMovieDouban(scrapy.Item):
     width = scrapy.Field()
 
 
+class TrailerMovieDouban(scrapy.Item):
+    id = scrapy.Field()
+    id_movie_douban = scrapy.Field()
+    url_video = scrapy.Field()
+
+
 # 影人相关
 
 class CelebrityDouban(scrapy.Item):
@@ -109,3 +115,26 @@ class ImageCelebrityDouban(scrapy.Item):
     sort = scrapy.Field()
     length = scrapy.Field()
     width = scrapy.Field()
+
+
+class ResourceMovie(scrapy.Item):
+    id_movie_douban = scrapy.Field()
+    id_website_resource = scrapy.Field()
+    id_type_resource = scrapy.Field()
+    url_resource = scrapy.Field()
+    name_zh = scrapy.Field()
+
+
+# 评论相关
+
+class CommentMovieDouban(scrapy.Item):
+    id_movie_douban = scrapy.Field()
+    id_user_douban = scrapy.Field()
+    agree_vote = scrapy.Field()
+    create_date = scrapy.Field()
+    content = scrapy.Field()
+
+
+class UserDouban(scrapy.Item):
+    id = scrapy.Field()
+    name_zh = scrapy.Field()

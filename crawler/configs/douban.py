@@ -39,6 +39,9 @@ ACCURACY_RELEASE_TIME = 3
 URL_COMMENT_MOVIE_START = 'https://movie.douban.com/subject/'
 URL_COMMENT_MOVIE_END = '/comments?start=0&limit=20&sort=new_score&status=P'
 
+# 电影预告片链接 + ID + /
+URL_TRAILER_MOVIE = 'https://movie.douban.com/trailer/'
+
 
 def get_cookie_douban():
     """
@@ -48,6 +51,29 @@ def get_cookie_douban():
     """
     return {'Cookie': 'bid=%s' % ''.join(random.sample(string.ascii_letters + string.digits, 11))}
 
+
+# 资源类型,下标即ID
+TYPE_RESOURCE_LIST = [
+    '',
+    '',
+    '免费观看',
+    'VIP免费观看',
+    '单片付费',
+    '用劵/单片付费'
+]
+
+# 资源网站，下标即ID
+WEBSITE_RESOURCE_LIST = [
+    '',
+    '',
+    '爱奇艺视频',
+    '腾讯视频',
+    '哔哩哔哩',
+    '搜狐视频',
+    '优酷视频',
+    '1905电影网',
+    '芒果TV'
+]
 
 # 电影类型 下标即为其ID
 TYPE_MOVIE_LIST = [

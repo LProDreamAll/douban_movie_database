@@ -43,6 +43,12 @@ class MovieDoubanPipeline(BasePipeline):
             'ImageMovieDouban': {
                 'sql': 'insert ignore into image_movie_douban values (%s,%s,%s,%s,%s)'
             },
+            'TrailerMovieDouban': {
+                'sql': 'insert ignore into trailer_movie_douban values (%s,%s,%s)'
+            },
+            'ResourceMovie': {
+                'sql': 'insert into resource_movie(id_movie_douban, id_website_resource, id_type_resource, url_resource, name_zh) values (%s,%s,%s,%s,%s)'
+            }
         }
         # 每个表添加data列表
         for table in self.item_dict.keys():

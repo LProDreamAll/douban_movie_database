@@ -17,6 +17,8 @@ from crawler.items.douban import RateMovieDouban
 from crawler.items.douban import TagMovie
 from crawler.items.douban import AwardMovie
 from crawler.items.douban import MovieDoubanToAwardMovie
+from crawler.items.douban import TrailerMovieDouban
+from crawler.items.douban import ResourceMovie
 
 
 class MovieDoubanSpider(RedisSpider):
@@ -67,8 +69,8 @@ class MovieDoubanSpider(RedisSpider):
             item_movie['start_year'] = re.search('[(](\d+)[)]',
                                                  start_year).group(1) if start_year is not None else 0
             # 中文名
-            item_movie['name_zh'] = re.search('[\u4e00-\u9fff()\d\s]*',
-                                              title).group().strip() if title is not None else ''
+            name_zh = re.search('[\u4e00-\u9fff()\d\s]*', title).group().strip() if title is not None else ''
+            item_movie['name_zh'] = name_zh
             # 原始名
             item_movie['name_origin'] = re.search('[\u4e00-\u9fff()\d\s]*(.*)',
                                                   title).group(1).strip() if title is not None else ''
@@ -89,6 +91,13 @@ class MovieDoubanSpider(RedisSpider):
             print('--------------------------------------')
             print(item_movie)
             yield item_movie
+            # 电影预告片
+            item_trailer = TrailerMovieDouban()
+            trailer = response.xpath('//li[@class="label-trailer"]/a/@href').get()
+            item_trailer['id'] = re.search('\d+', trailer).group() if trailer is not None else 0
+            item_trailer['id_movie_douban'] = movie_id
+            item_trailer['url_video'] = ''
+            yield item_trailer
             # 电影别名
             alias_label = info.xpath('span[text()="又名:"]').get()
             if alias_label is not None:
@@ -142,7 +151,7 @@ class MovieDoubanSpider(RedisSpider):
                 yield item_movie_to_type
             # 电影评分
             is_score = response.xpath('//div[@class="rating_sum"]/text()').get()
-            if re.search('暂无评分', is_score) is not None:
+            if re.search('暂无评分', is_score) is None:
                 score = response.xpath('//div[@rel="v:rating"]')
                 item_score = RateMovieDouban()
                 item_score['id'] = movie_id
@@ -184,6 +193,25 @@ class MovieDoubanSpider(RedisSpider):
                 print('--------------------------------------')
                 print(item_movie_to_award)
                 yield item_movie_to_award
+            # 电影资源
+            resource_list = response.xpath('//ul[@class="bs"]/li')
+            if resource_list:
+                for resource in resource_list:
+                    item_resource = ResourceMovie()
+                    item_resource['id_movie_douban'] = movie_id
+                    item_resource['id_website_resource'] = 1
+                    website = resource.xpath('a/text()').get().strip()
+                    if website in config.WEBSITE_RESOURCE_LIST:
+                        item_resource['id_website_resource'] = config.WEBSITE_RESOURCE_LIST.index(website)
+                    type = resource.xpath('..//span/text()').get().strip()
+                    item_resource['id_type_resource'] = 1
+                    if type in config.TYPE_RESOURCE_LIST:
+                        item_resource['id_type_resource'] = config.TYPE_RESOURCE_LIST.index(type)
+                    item_resource['url_resource'] = resource.xpath('a/@href').get()
+                    item_resource['name_zh'] = name_zh
+                    print('--------------------')
+                    print(item_resource)
+                    yield item_resource
             self.logger.info('get douban movie success,id:{}'.format(movie_id))
         else:
             self.logger.warning('get douban movie failed,id:{}'.format(movie_id))
