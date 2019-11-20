@@ -6,10 +6,12 @@
 import scrapy
 
 """
-豆瓣电影相关
+豆瓣相关
 
 """
 
+
+# 电影相关
 
 class MovieDouban(scrapy.Item):
     id = scrapy.Field()
@@ -63,6 +65,16 @@ class MovieDoubanToAwardMovie(scrapy.Item):
     is_nominated = scrapy.Field()
 
 
+class TagMovie(scrapy.Item):
+    id_movie_douban = scrapy.Field()
+    name_zh = scrapy.Field()
+
+
+class AwardMovie(scrapy.Item):
+    id = scrapy.Field()
+    name_zh = scrapy.Field()
+
+
 class ImageMovieDouban(scrapy.Item):
     id = scrapy.Field()
     id_movie_douban = scrapy.Field()
@@ -70,3 +82,30 @@ class ImageMovieDouban(scrapy.Item):
     length = scrapy.Field()
     width = scrapy.Field()
 
+
+# 影人相关
+
+class CelebrityDouban(scrapy.Item):
+    id = scrapy.Field()
+    id_celebrity_imdb = scrapy.Field()
+    name_zh = scrapy.Field()
+    name_origin = scrapy.Field()
+    sex = scrapy.Field()
+    birth_date = scrapy.Field()
+    url_portrait = scrapy.Field()
+    summary = scrapy.Field()
+    is_updated = scrapy.Field()
+
+
+class AliasCelebrityDouban(scrapy.Item):
+    id_celebrity_douban = scrapy.Field()
+    name_alias = scrapy.Field()
+    is_nikename = scrapy.Field()
+
+
+class ImageCelebrityDouban(scrapy.Item):
+    id = scrapy.Field()
+    id_celebrity_douban = scrapy.Field()
+    sort = scrapy.Field()
+    length = scrapy.Field()
+    width = scrapy.Field()

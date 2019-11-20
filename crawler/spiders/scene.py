@@ -116,7 +116,8 @@ class SceneSpider(RedisSpider):
             item_movie['start_year'] = data['year']
             item_movie['description'] = data['overview']
             item_movie['url_map'] = data['staticMapUrl']
-            self.logger.info('get scene movie success, id:{},name:{}'.format(item_movie['id'], item_movie['name_zh']))
+            print('----------------------------------')
+            print(item_movie)
             yield item_movie
             # 场景
             for plot in data['plots']:
@@ -127,6 +128,7 @@ class SceneSpider(RedisSpider):
                 item_scene['name_zh'] = plot['sceneName']
                 item_scene['happen_time'] = plot['position']
                 yield item_scene
+            self.logger.info('get scene movie success, id:{},name:{}'.format(item_movie['id'], item_movie['name_zh']))
         else:
             self.logger.warning('get scene movie failed,possible id：{}'.format(response.url.split('/')[-1]))
 
@@ -162,7 +164,6 @@ class SceneSpider(RedisSpider):
             item_place['url_earth'] = data['mapPath']
             item_place['url_satellite'] = data['satellitePath']
             item_place['url_map'] = data['staticMapUrl']
-            self.logger.info('get scene place success, id:{},name:{}'.format(item_place['id'], item_place['name_zh']))
             yield item_place
             # 场景详情
             for scene in data['scenes']:
@@ -233,5 +234,6 @@ class SceneSpider(RedisSpider):
             item_city['name_zh'] = data['level3Cname']
             item_city['name_en'] = data['level3Ename']
             yield item_city
+            self.logger.info('get scene place success, id:{},name:{}'.format(item_place['id'], item_place['name_zh']))
         else:
             self.logger.warning('get scene place failed,possible id：{}'.format(response.url.split('/')[-1]))

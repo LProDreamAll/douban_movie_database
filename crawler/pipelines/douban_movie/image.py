@@ -4,10 +4,10 @@
 # author: humingk
 # ----------------------
 
-from crawler.pipelines.pipeline import Pipeline
+from crawler.pipelines.base import BasePipeline
 
 
-class ImagePipeline(Pipeline):
+class ImageDoubanPipeline(BasePipeline):
     """
     图片相关
 

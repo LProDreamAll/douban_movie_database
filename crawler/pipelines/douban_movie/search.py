@@ -4,12 +4,12 @@
 # author: humingk
 # ----------------------
 
-from crawler.pipelines.pipeline import Pipeline
+from crawler.pipelines.base import BasePipeline
 
 
-class SearchPipeline(Pipeline):
+class SearchDoubanPipeline(BasePipeline):
     """
-    电影搜索相关
+    豆瓣电影搜索相关
 
     """
 

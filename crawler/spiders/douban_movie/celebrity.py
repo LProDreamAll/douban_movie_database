@@ -6,15 +6,13 @@
 import re
 import scrapy
 from crawler.tools.database_pool import database_pool
-from crawler.configs import default
-from crawler.configs import celebrity_douban as config
+from crawler.configs import douban as config
 from scrapy_redis.spiders import RedisSpider
 
-from crawler.items.celebrity_douban import CelebrityDouban
-from crawler.items.celebrity_douban import AliasCelebrityDouban
-from crawler.items.celebrity_douban import ImageCelebrityDouban
-from crawler.items.movie import AwardMovie
-from crawler.items.movie_douban import MovieDoubanToAwardMovie
+from crawler.items.douban import CelebrityDouban
+from crawler.items.douban import AliasCelebrityDouban
+from crawler.items.douban import MovieDoubanToAwardMovie
+from crawler.items.douban import AwardMovie
 
 
 class CelebrityDoubanSpider(RedisSpider):
@@ -28,7 +26,7 @@ class CelebrityDoubanSpider(RedisSpider):
     allowed_domains = ['movie.douban.com']
     custom_settings = {
         'ITEM_PIPELINES': {
-            'crawler.pipelines.celebrity_douban.CelebrityDoubanPipeline': 300
+            'crawler.pipelines.douban_movie.celebrity.CelebrityDoubanPipeline': 300
         }
     }
 
@@ -40,8 +38,8 @@ class CelebrityDoubanSpider(RedisSpider):
     def start_requests(self):
         self.cursor.execute('select id from celebrity_douban where is_updated=0')
         for id, in self.cursor.fetchall():
-            yield scrapy.Request(url="{}{}/".format(config.URL_CELEBRITY_DOUBAN, id),
-                                 cookies=default.get_cookie_douban(),
+            yield scrapy.Request(url="{}{}/".format(config.URL_CELEBRITY, id),
+                                 cookies=config.get_cookie_douban(),
                                  meta={'id': id}, callback=self.parse)
 
     def parse(self, response):
@@ -69,13 +67,15 @@ class CelebrityDoubanSpider(RedisSpider):
                                                      birth_date).group() if birth_date is not None else None
             item_celebrity['url_portrait'] = re.search('p(\d+)', response.xpath(
                 '//div[@class="pic"]//a[@class="nbg"]/@href').get()).group(1)
-            summary_body = response.xpath('//div[@class="bd"]')
-            if summary_body.xpath('span') is None:
-                item_celebrity['summary'] = summary_body.xpath('text()').get()
+            summary_body = response.xpath('//div[@id="intro"]/div[@class="bd"]/span')
+            item_celebrity['summary'] = ''
+            print('=============================================================')
+            print(summary_body)
+            if not summary_body:
+                item_celebrity['summary'] += response.xpath('//div[@id="intro"]/div[@class="bd"]/text()').get()
             else:
-                short = ''.join(summary_body.xpath('.//span[@class="short"]/text()').getall())
-                long = ''.join(summary_body.xpath('.//span[@class="all hidden"]/text()').getall())
-                item_celebrity['summary'] = short + long
+                summary_list = summary_body.xpath('text()').getall()
+                item_celebrity['summary'] = ''.join(summary_list)
             item_celebrity['is_updated'] = 1
             print(item_celebrity)
             yield item_celebrity
@@ -119,15 +119,6 @@ class CelebrityDoubanSpider(RedisSpider):
                 print('----------------')
                 print(item_alias)
                 yield item_alias
-            # 影人图片
-            image_list = response.xpath('//div[@id="photos"]//img/@src').getall()
-            for image in image_list:
-                item_image = ImageCelebrityDouban()
-                item_image['id'] = re.search('p(\d+)', image).group(1)
-                item_image['id_celebrity_douban'] = celebrity_id
-                print('-----------')
-                print(item_image)
-                yield item_image
             self.logger.info('get douban celebrity success,id:{}'.format(celebrity_id))
         else:
             self.logger.warning('get douban celebrity failed,id:{}'.format(celebrity_id))

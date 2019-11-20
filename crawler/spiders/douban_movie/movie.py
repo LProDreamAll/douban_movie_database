@@ -6,18 +6,17 @@
 import re
 import scrapy
 from crawler.tools.database_pool import database_pool
-from crawler.configs import default
-from crawler.configs import movie_douban as config
+from crawler.configs import douban as config
 from scrapy_redis.spiders import RedisSpider
 
-from crawler.items.movie_douban import MovieDouban
-from crawler.items.movie_douban import AliasMovieDouban
-from crawler.items.movie_douban import MovieDoubanToCelebrityDouban
-from crawler.items.movie_douban import MovieDoubanToTypeMovie
-from crawler.items.movie_douban import RateMovieDouban
-from crawler.items.movie import TagMovie
-from crawler.items.movie import AwardMovie
-from crawler.items.movie_douban import MovieDoubanToAwardMovie
+from crawler.items.douban import MovieDouban
+from crawler.items.douban import AliasMovieDouban
+from crawler.items.douban import MovieDoubanToCelebrityDouban
+from crawler.items.douban import MovieDoubanToTypeMovie
+from crawler.items.douban import RateMovieDouban
+from crawler.items.douban import TagMovie
+from crawler.items.douban import AwardMovie
+from crawler.items.douban import MovieDoubanToAwardMovie
 
 
 class MovieDoubanSpider(RedisSpider):
@@ -31,7 +30,7 @@ class MovieDoubanSpider(RedisSpider):
     allowed_domains = ['movie.douban.com']
     custom_settings = {
         'ITEM_PIPELINES': {
-            'crawler.pipelines.movie_douban.MovieDoubanPipeline': 300
+            'crawler.pipelines.douban_movie.movie.MovieDoubanPipeline': 300
         }
     }
 
@@ -43,8 +42,8 @@ class MovieDoubanSpider(RedisSpider):
     def start_requests(self):
         self.cursor.execute('select id from movie_douban where is_updated=0')
         for id, in self.cursor.fetchall():
-            yield scrapy.Request(url="{}{}/".format(config.URL_MOVIE_DOUBAN, id),
-                                 cookies=default.get_cookie_douban(),
+            yield scrapy.Request(url="{}{}/".format(config.URL_MOVIE, id),
+                                 cookies=config.get_cookie_douban(),
                                  meta={'id': id}, callback=self.parse)
 
     def parse(self, response):
@@ -52,9 +51,7 @@ class MovieDoubanSpider(RedisSpider):
         if response.xpath('//div[@id="content"]'):
             info = response.xpath('//div[@id="info"]')
             title = response.xpath('//h1/span[1]/text()').get()
-            start_year = response.xpath('//h1/span[@class="year"]/text()').get()
             type_list = info.xpath('span[@property="v:genre"]/text()').getall()
-            imdb_id = info.xpath('span[text()="IMDb链接:"]/following-sibling::a/text()').get()
             # 豆瓣电影
             item_movie = MovieDouban()
             item_movie['id'] = movie_id
@@ -64,7 +61,9 @@ class MovieDoubanSpider(RedisSpider):
                 item_movie['id_type_video'] = 3
             elif '短片' in type_list:
                 item_movie['id_type_video'] = 4
+            imdb_id = info.xpath('span[text()="IMDb链接:"]/following-sibling::a/text()').get()
             item_movie['id_movie_imdb'] = re.search('tt(\d+)', imdb_id).group(1) if imdb_id is not None else 0
+            start_year = response.xpath('//h1/span[@class="year"]/text()').get()
             item_movie['start_year'] = re.search('[(](\d+)[)]',
                                                  start_year).group(1) if start_year is not None else 0
             # 中文名
@@ -73,8 +72,9 @@ class MovieDoubanSpider(RedisSpider):
             # 原始名
             item_movie['name_origin'] = re.search('[\u4e00-\u9fff()\d\s]*(.*)',
                                                   title).group(1).strip() if title is not None else ''
-            item_movie['runtime'] = info.xpath('span[@property="v:runtime"]/@content').get()
-            item_movie['url_poster'] = re.search('p(\d+)',
+            runtime = info.xpath('span[@property="v:runtime"]/@content').get()
+            item_movie['runtime'] = runtime if runtime is not None else 0
+            item_movie['url_poster'] = re.search('[ps](\d+)',
                                                  response.xpath('//a[@class="nbgnbg"]/img/@src').get()).group(1)
             item_movie['summary'] = ''.join(response.xpath('//span[@property="v:summary"]/text()').getall())
             see_list = response.xpath('//div[@class="subject-others-interests-ft"]/a/text()').getall()
@@ -110,8 +110,6 @@ class MovieDoubanSpider(RedisSpider):
                 item_movie_to_celebrity['id_movie_douban'] = movie_id
                 item_movie_to_celebrity['id_celebrity_douban'] = re.search('\d+',
                                                                            celebrity.xpath('@href').get()).group()
-                print("each =======================================================================")
-                print(celebrity.get())
                 # 主演
                 if celebrity.xpath('@rel').get() == 'v:starring':
                     item_movie_to_celebrity['id_profession'] = 4
@@ -143,17 +141,19 @@ class MovieDoubanSpider(RedisSpider):
                 print(item_movie_to_type)
                 yield item_movie_to_type
             # 电影评分
-            score = response.xpath('//div[@rel="v:rating"]')
-            item_score = RateMovieDouban()
-            item_score['id'] = movie_id
-            item_score['score'] = score.xpath('div/strong/text()').get()
-            item_score['vote'] = score.xpath('.//span[@property="v:votes"]/text()').get()
-            vote_list = score.xpath('.//span[@class="rating_per"]/text()').getall()
-            for index, vote in enumerate(vote_list):
-                item_score['score{}'.format(5 - index)] = re.search('(.*)%', vote).group(1)
-            print('--------------------------------------')
-            print(item_score)
-            yield item_score
+            is_score = response.xpath('//div[@class="rating_sum"]/text()').get()
+            if re.search('暂无评分', is_score) is not None:
+                score = response.xpath('//div[@rel="v:rating"]')
+                item_score = RateMovieDouban()
+                item_score['id'] = movie_id
+                item_score['score'] = score.xpath('div/strong/text()').get()
+                item_score['vote'] = score.xpath('.//span[@property="v:votes"]/text()').get()
+                vote_list = score.xpath('.//span[@class="rating_per"]/text()').getall()
+                for index, vote in enumerate(vote_list):
+                    item_score['score{}'.format(5 - index)] = re.search('(.*)%', vote).group(1)
+                print('--------------------------------------')
+                print(item_score)
+                yield item_score
             # 电影标签
             tag_list = response.xpath('//div[@class="tags-body"]/a/text()').getall()
             for tag in tag_list:

@@ -3,10 +3,10 @@
 
 # author: humingk
 # ----------------------
-from crawler.pipelines.pipeline import Pipeline
+from crawler.pipelines.base import BasePipeline
 
 
-class MovieDoubanPipeline(Pipeline):
+class MovieDoubanPipeline(BasePipeline):
     """
     豆瓣电影相关
 

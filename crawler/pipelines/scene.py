@@ -4,10 +4,10 @@
 # author: humingk
 # ----------------------
 
-from crawler.pipelines.pipeline import Pipeline
+from crawler.pipelines.base import BasePipeline
 
 
-class ScenePipeline(Pipeline):
+class ScenePipeline(BasePipeline):
     """
     场景相关
 

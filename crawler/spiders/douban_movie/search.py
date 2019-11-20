@@ -9,8 +9,7 @@ import execjs
 import scrapy
 from scrapy_redis.spiders import RedisSpider
 from crawler.tools.database_pool import database_pool
-from crawler.configs import default
-from crawler.configs import search as config
+from crawler.configs import douban as config
 
 from crawler.items.search import MovieDouban
 from crawler.items.search import MovieScene
@@ -18,27 +17,27 @@ from crawler.items.search import CelebrityDouban
 from crawler.items.search import CelebrityScene
 
 
-class SearchSpider(RedisSpider):
+class SearchDoubanSpider(RedisSpider):
     """
-    关于搜索匹配,以下五种情况对应搜索
+    关于豆瓣电影搜索
 
-    用法： scrapy crawl search -a type=
-
-    movie_imdb          IMDB的ttID(电影)
-    celebrity_imdb      IMDB的nmID(人物)
-    movie_scene         片场的name(电影)
-    celebrity_scene     片场的name(人物)
-    movie_resource      资源的name(电影)
+    用法：
+    scrapy crawl search_douban -a type={}
+    - movie_imdb        根据imdb_ID获取豆瓣电影ID
+    - celebrity_imdb    根据imdb_ID获取豆瓣影人ID
+    - movie_scene       根据场景_名称获取豆瓣电影ID
+    - celebrity_scene   根据场景_名称获取豆瓣影人ID
+    - movie_resource    根据资源_名称获取豆瓣电影ID
 
     """
 
-    name = 'search'
+    name = 'search_douban'
     # start_url存放容器改为redis list
-    redis_key = 'search:start_urls'
+    redis_key = 'search_douban:start_urls'
     allowed_domains = ['search.douban.com']
     custom_settings = {
         'ITEM_PIPELINES': {
-            'crawler.pipelines.search.SearchPipeline': 300
+            'crawler.pipelines.douban_movie.search.SearchDoubanPipeline': 300
         }
     }
 
@@ -63,29 +62,35 @@ class SearchSpider(RedisSpider):
         :return:
         """
         if self.type == self.type_movie_imdb:
-            self.cursor.execute('select id,start_year from movie_imdb')
+            self.cursor.execute('select movie_imdb.id,movie_imdb.start_year from movie_imdb '
+                                'left join movie_douban '
+                                'on movie_imdb.id=movie_douban.id_movie_imdb '
+                                'where movie_douban.id_movie_imdb is null')
             for id, start_year in self.cursor.fetchall():
-                yield scrapy.Request(url=config.URL_SEARCH_MOVIE_DOUBAN + 'tt' + '%07d' % id,
-                                     meta={'id': id, 'start_year': start_year}, cookies=default.get_cookie_douban(),
+                yield scrapy.Request(url=config.URL_SEARCH_MOVIE + 'tt' + '%07d' % id,
+                                     meta={'id': id, 'start_year': start_year}, cookies=config.get_cookie_douban(),
                                      callback=self.parse)
         elif self.type == self.type_movie_scene:
             self.cursor.execute('select id,name_zh,start_year from movie_scene where id_movie_douban=0')
             for id, name_zh, start_year in self.cursor.fetchall():
-                yield scrapy.Request(url=config.URL_SEARCH_MOVIE_DOUBAN + name_zh,
-                                     meta={'id': id, 'start_year': start_year}, cookies=default.get_cookie_douban(),
+                yield scrapy.Request(url=config.URL_SEARCH_MOVIE + name_zh,
+                                     meta={'id': id, 'start_year': start_year}, cookies=config.get_cookie_douban(),
                                      callback=self.parse)
         elif self.type == self.type_movie_resource:
             pass
         elif self.type == self.type_celebrity_imdb:
-            self.cursor.execute('select id from celebrity_imdb')
-            for id in self.cursor.fetchall():
-                yield scrapy.Request(url=config.URL_SEARCH_MOVIE_DOUBAN + 'nm' + '%07d' % id, meta={'id': id},
-                                     cookies=default.get_cookie_douban(), callback=self.parse)
+            self.cursor.execute('select celebrity_imdb.id from celebrity_imdb '
+                                'left join celebrity_douban '
+                                'on celebrity_imdb.id=celebrity_douban.id_celebrity_imdb '
+                                'where celebrity_douban.id_celebrity_imdb is null')
+            for id, in self.cursor.fetchall():
+                yield scrapy.Request(url=config.URL_SEARCH_MOVIE + 'nm' + '%07d' % id, meta={'id': id},
+                                     cookies=config.get_cookie_douban(), callback=self.parse)
         elif self.type == self.type_celebrity_scene:
             self.cursor.execute('select id,name_zh from celebrity_scene where id_celebrity_douban=0')
             for id, name_zh in self.cursor.fetchall():
-                yield scrapy.Request(url=config.URL_SEARCH_MOVIE_DOUBAN + name_zh, meta={'id': id},
-                                     cookies=default.get_cookie_douban(), callback=self.parse)
+                yield scrapy.Request(url=config.URL_SEARCH_MOVIE + name_zh, meta={'id': id},
+                                     cookies=config.get_cookie_douban(), callback=self.parse)
 
     def parse(self, response):
         """
@@ -100,6 +105,7 @@ class SearchSpider(RedisSpider):
         data_encrypted = re.search('window.__DATA__ = "([^"]*)"',
                                    response.xpath('/html/body/script[6]/text()').get()).group(1)
         title_list = self.decrypt_js.call('decrypt', data_encrypted)['payload']['items']
+        id = response.meta['id']
         if title_list:
             for title in title_list:
                 # 标题类型 search_common：影人 search_subject：电影
@@ -124,7 +130,7 @@ class SearchSpider(RedisSpider):
                     elif self.type == self.type_movie_scene:
                         item_movie_scene = MovieScene()
                         item_movie_scene['id_movie_douban'] = title_id
-                        item_movie_scene['id'] = response.meta['id']
+                        item_movie_scene['id'] = id
                         yield item_movie_scene
                     elif self.type == self.type_movie_resource:
                         # --- coding ---
@@ -140,13 +146,13 @@ class SearchSpider(RedisSpider):
                     elif self.type == self.type_celebrity_scene:
                         item_celebrity_scene = CelebrityScene()
                         item_celebrity_scene['id_celebrity_douban'] = title_id
-                        item_celebrity_scene['id'] = response.meta['id']
+                        item_celebrity_scene['id'] = id
                         yield item_celebrity_scene
                     flag = True
                 # 找到最佳匹配结果，即可跳出
                 if flag:
                     self.logger.info('get search list success,id:{},name:{},type:{}'
-                                     .format(response.meta['id'], title_name, self.type))
+                                     .format(id, title_name, self.type))
                     break
         if not flag:
             # 搜索失败，部分类型标记为已搜索，避免重复搜索
@@ -158,6 +164,6 @@ class SearchSpider(RedisSpider):
             elif self.type == self.type_celebrity_scene:
                 item_celebrity_scene = CelebrityScene()
                 item_celebrity_scene['id_celebrity_douban'] = 1
-                item_celebrity_scene['id'] = response.meta['id']
+                item_celebrity_scene['id'] = id
                 yield item_celebrity_scene
-            self.logger.warning('get search list failed,id:{},type:{}'.format(response.meta['id'], self.type))
+            self.logger.warning('get search list failed,id:{},type:{}'.format(id, self.type))

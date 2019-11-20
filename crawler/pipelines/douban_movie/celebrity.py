@@ -3,10 +3,10 @@
 
 # author: humingk
 # ----------------------
-from crawler.pipelines.pipeline import Pipeline
+from crawler.pipelines.base import BasePipeline
 
 
-class CelebrityDoubanPipeline(Pipeline):
+class CelebrityDoubanPipeline(BasePipeline):
     """
     豆瓣影人相关
 
@@ -27,9 +27,6 @@ class CelebrityDoubanPipeline(Pipeline):
             },
             'MovieDoubanToAwardMovie': {
                 'sql': 'insert ignore into movie_douban_to_award_movie values (%s,%s,%s,%s,%s,%s)'
-            },
-            'ImageCelebrityDouban': {
-                'sql': 'insert into image_celebrity_douban values (%s,%s)'
             }
         }
         # 每个表添加data列表

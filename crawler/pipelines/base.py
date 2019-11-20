@@ -15,9 +15,9 @@ from crawler.tools.database_pool import database_pool
 import warnings
 
 
-class Pipeline(object):
+class BasePipeline(object):
     """
-    pipeline类的公共父类，用于批量处理不同表的sql语句
+    xxxPipeline类的公共父类，用于批量处理不同表的sql语句
 
     PS: 每一个子类需要初始化init方法中的item_dict中不同表对应的sql语句及其data列表
 
@@ -51,7 +51,8 @@ class Pipeline(object):
         :param table: item_dict中的表名
         :return:
         """
-        warnings.filterwarnings("ignore")
+        # --------------------------------------------------
+        # warnings.filterwarnings("ignore")
         self.cursor.executemany(self.item_dict[table]['sql'], self.item_dict[table]['data'])
         self.conn.commit()
         self.item_dict[table]['data'].clear()
