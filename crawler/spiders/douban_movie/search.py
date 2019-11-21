@@ -53,7 +53,7 @@ class SearchDoubanSpider(RedisSpider):
         self.type_movie_resource = 'movie_resource'
         # 编译JS解密代码,通过call调用
         self.decrypt_js = execjs.compile(
-            open('crawler/tools/decrypt_search_douban.js', mode='r', encoding='gbk', errors='ignore').read())
+            open('crawler/tools/douban_search_decrypt.js', mode='r', encoding='gbk', errors='ignore').read())
 
     def start_requests(self):
         """
