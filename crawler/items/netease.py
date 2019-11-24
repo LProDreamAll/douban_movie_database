@@ -29,12 +29,6 @@ class AlbumNetease(scrapy.Item):
     total = scrapy.Field()
 
 
-class MovieDoubanToNetease(scrapy.Item):
-    id_movie_douban = scrapy.Field()
-    id_netease = scrapy.Field()
-    type_netease = scrapy.Field()
-
-
 class SongNeteaseToPlaylistNetease(scrapy.Item):
     id_song_netease = scrapy.Field()
     id_playlist_netease = scrapy.Field()
@@ -58,3 +52,18 @@ class CommentNetease(scrapy.Item):
 class UserNetease(scrapy.Item):
     id = scrapy.Field()
     name_zh = scrapy.Field()
+
+
+class ArtistNetease(scrapy.Item):
+    id = scrapy.Field()
+    name_zh = scrapy.Field()
+
+
+class ArtistNeteaseToAlbumNetease(scrapy.Item):
+    id_artist_netease = scrapy.Field()
+    id_album_netease = scrapy.Field()
+
+
+class ArtistNeteaseToSongNetease(scrapy.Item):
+    id_artist_netease = scrapy.Field()
+    id_song_netease = scrapy.Field()

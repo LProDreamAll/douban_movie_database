@@ -5,15 +5,14 @@
 # ----------------------
 import re
 import scrapy
-from crawler.tools.database_pool import database_pool
 from crawler.configs import douban as config
-from scrapy_redis.spiders import RedisSpider
+from crawler.spiders.base import BaseSpider
 
 from crawler.items.douban import ImageMovieDouban
 from crawler.items.douban import ImageCelebrityDouban
 
 
-class ImageDoubanSpider(RedisSpider):
+class ImageDoubanSpider(BaseSpider):
     """
     图片相关
 
@@ -29,25 +28,31 @@ class ImageDoubanSpider(RedisSpider):
     allowed_domains = ['movie.douban.com']
     custom_settings = {
         'ITEM_PIPELINES': {
-            'crawler.pipelines.douban_movie.image.ImageDoubanPipeline': 300
+            'crawler.pipelines.douban_movie.douban.DoubanPipeline': 300
         }
     }
 
     def __init__(self, type=None, **kwargs):
         super().__init__(**kwargs)
-        self.conn = database_pool.connection()
-        self.cursor = self.conn.cursor()
         self.type = type
         self.type_movie = 'movie'
         self.type_celebrity = 'celebrity'
 
-    def start_requests(self):
+    def prepare(self, offset, limit):
+        """
+        获取请求列表
+
+        :param offset:
+        :param limit:
+        :return:
+        """
         if self.type == self.type_movie:
             self.cursor.execute(
                 'select movie_douban.id from movie_douban '
                 'left join image_movie_douban '
                 'on movie_douban.id=image_movie_douban.id_movie_douban '
-                'where image_movie_douban.id_movie_douban is null')
+                'where image_movie_douban.id_movie_douban is null '
+                'limit {},{}'.format(offset, limit))
             for id, in self.cursor.fetchall():
                 yield scrapy.Request(url="{}{}{}".format(config.URL_IMAGE_MOVIE_START, id, config.URL_IMAGE_MOVIE_END),
                                      cookies=config.get_cookie_douban(),
@@ -57,12 +62,15 @@ class ImageDoubanSpider(RedisSpider):
                 'select celebrity_douban.id from celebrity_douban '
                 'left join image_celebrity_douban '
                 'on celebrity_douban.id=image_celebrity_douban.id_celebrity_douban '
-                'where image_celebrity_douban.id_celebrity_douban is null')
+                'where image_celebrity_douban.id_celebrity_douban is null '
+                'limit {},{}'.format(offset, limit))
             for id, in self.cursor.fetchall():
                 yield scrapy.Request(
                     url="{}{}{}".format(config.URL_IMAGE_CELEBRITY_START, id, config.URL_IMAGE_CELEBRITY_END),
                     cookies=config.get_cookie_douban(),
                     meta={'id': id}, callback=self.parse)
+        self.logger.info(
+            'get douban image\'s request list success,type:{},offset:{},limit:{}'.format(self.type, offset, limit))
 
     def parse(self, response):
         """
@@ -96,3 +104,8 @@ class ImageDoubanSpider(RedisSpider):
             self.logger.info('get douban image success,id:{},type:{}'.format(id, self.type))
         else:
             self.logger.warning('get douban image failed,id:{},type:{}'.format(id, self.type))
+        # 获取新的请求列表
+        self.count += 1
+        if self.count % self.limit == 0:
+            for request in self.prepare(self.count, self.limit):
+                yield request

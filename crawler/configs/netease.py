@@ -13,11 +13,11 @@ NUM_HOT_COMMENT=2
 
 # -----------------------------------
 
-# weapi 搜索链接
-# URL_SEARCH_TIPS = 'https://music.163.com/weapi/search/suggest/web'
+# weapi 搜索链接 (类型集合)
+URL_SEARCH_TIPS = 'https://music.163.com/weapi/search/suggest/web'
 
-# eapi 搜索链接 （信息较全）
-URL_SEARCH_TIPS = 'https://music.163.com/eapi/v1/search/get'
+# eapi 搜索链接 （信息较全）(但类型单一)
+# URL_SEARCH_TIPS = 'https://music.163.com/eapi/v1/search/get'
 
 # eapi 请求参数中需要用到的搜索链接
 URL_SEARCH_TIPS_EAPI = '/api/v1/search/get'

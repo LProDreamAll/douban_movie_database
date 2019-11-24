@@ -7,9 +7,8 @@
 import re
 import execjs
 import scrapy
-from scrapy_redis.spiders import RedisSpider
-from crawler.tools.database_pool import database_pool
 from crawler.configs import douban as config
+from crawler.spiders.base import BaseSpider
 
 from crawler.items.search import MovieDouban
 from crawler.items.search import MovieScene
@@ -17,7 +16,7 @@ from crawler.items.search import CelebrityDouban
 from crawler.items.search import CelebrityScene
 
 
-class SearchDoubanSpider(RedisSpider):
+class SearchDoubanSpider(BaseSpider):
     """
     关于豆瓣电影搜索
 
@@ -43,8 +42,6 @@ class SearchDoubanSpider(RedisSpider):
 
     def __init__(self, type=None, **kwargs):
         super().__init__(**kwargs)
-        self.conn = database_pool.connection()
-        self.cursor = self.conn.cursor()
         self.type = type
         self.type_movie_imdb = 'movie_imdb'
         self.type_celebrity_imdb = 'celebrity_imdb'
@@ -55,23 +52,27 @@ class SearchDoubanSpider(RedisSpider):
         self.decrypt_js = execjs.compile(
             open('crawler/tools/douban_search_decrypt.js', mode='r', encoding='gbk', errors='ignore').read())
 
-    def start_requests(self):
+    def prepare(self, offset, limit):
         """
-        爬取搜索内容
+        获取请求列表
 
+        :param offset:
+        :param limit:
         :return:
         """
         if self.type == self.type_movie_imdb:
             self.cursor.execute('select movie_imdb.id,movie_imdb.start_year from movie_imdb '
                                 'left join movie_douban '
                                 'on movie_imdb.id=movie_douban.id_movie_imdb '
-                                'where movie_douban.id_movie_imdb is null')
+                                'where movie_douban.id_movie_imdb is null '
+                                'limit {},{}'.format(offset, limit))
             for id, start_year in self.cursor.fetchall():
                 yield scrapy.Request(url=config.URL_SEARCH_MOVIE + 'tt' + '%07d' % id,
                                      meta={'id': id, 'start_year': start_year}, cookies=config.get_cookie_douban(),
                                      callback=self.parse)
         elif self.type == self.type_movie_scene:
-            self.cursor.execute('select id,name_zh,start_year from movie_scene where id_movie_douban=0')
+            self.cursor.execute('select id,name_zh,start_year from movie_scene where id_movie_douban=0 '
+                                'limit {},{}'.format(offset, limit))
             for id, name_zh, start_year in self.cursor.fetchall():
                 yield scrapy.Request(url=config.URL_SEARCH_MOVIE + name_zh,
                                      meta={'id': id, 'start_year': start_year}, cookies=config.get_cookie_douban(),
@@ -82,15 +83,19 @@ class SearchDoubanSpider(RedisSpider):
             self.cursor.execute('select celebrity_imdb.id from celebrity_imdb '
                                 'left join celebrity_douban '
                                 'on celebrity_imdb.id=celebrity_douban.id_celebrity_imdb '
-                                'where celebrity_douban.id_celebrity_imdb is null')
+                                'where celebrity_douban.id_celebrity_imdb is null '
+                                'limit {},{}'.format(offset, limit))
             for id, in self.cursor.fetchall():
                 yield scrapy.Request(url=config.URL_SEARCH_MOVIE + 'nm' + '%07d' % id, meta={'id': id},
                                      cookies=config.get_cookie_douban(), callback=self.parse)
         elif self.type == self.type_celebrity_scene:
-            self.cursor.execute('select id,name_zh from celebrity_scene where id_celebrity_douban=0')
+            self.cursor.execute('select id,name_zh from celebrity_scene where id_celebrity_douban=0 '
+                                'limit {},{}'.format(offset, limit))
             for id, name_zh in self.cursor.fetchall():
                 yield scrapy.Request(url=config.URL_SEARCH_MOVIE + name_zh, meta={'id': id},
                                      cookies=config.get_cookie_douban(), callback=self.parse)
+        self.logger.info(
+            'get douban search\'s request list success,type:{},offset:{},limit:{}'.format(self.type, offset, limit))
 
     def parse(self, response):
         """
@@ -167,3 +172,8 @@ class SearchDoubanSpider(RedisSpider):
                 item_celebrity_scene['id'] = id
                 yield item_celebrity_scene
             self.logger.warning('get search list failed,id:{},type:{}'.format(id, self.type))
+        # 获取新的请求列表
+        self.count += 1
+        if self.count % self.limit == 0:
+            for request in self.prepare(self.count, self.limit):
+                yield request

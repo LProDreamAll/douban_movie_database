@@ -5,16 +5,17 @@
 # ----------------------
 import json
 import scrapy
-from crawler.tools.database_pool import database_pool
 from crawler.tools.netease_encrypt import form_data
 from crawler.configs import netease as config
-from scrapy_redis.spiders import RedisSpider
+from crawler.spiders.base import BaseSpider
 
 from crawler.items.netease import SongNetease
 from crawler.items.netease import SongNeteaseToAlbumNetease
+from crawler.items.netease import ArtistNetease
+from crawler.items.netease import ArtistNeteaseToSongNetease
 
 
-class AlbumNeteaseSpider(RedisSpider):
+class AlbumNeteaseSpider(BaseSpider):
     """
     网易云音乐专辑相关
 
@@ -25,32 +26,33 @@ class AlbumNeteaseSpider(RedisSpider):
     allowed_domains = ['music.163.com']
     custom_settings = {
         'ITEM_PIPELINES': {
-            'crawler.pipelines.netease_music.album.AlbumNeteasePipeline': 300
+            'crawler.pipelines.netease.NeteasePipeline': 300
         }
     }
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.conn = database_pool.connection()
-        self.cursor = self.conn.cursor()
         self.form_data = form_data()
 
-    def start_requests(self):
-        # self.cursor.execute("select movie_douban.id,movie_douban.name_zh from movie_douban "
-        #                     "left join movie_douban_to_netease "
-        #                     "on movie_douban.id=movie_douban_to_netease.id_movie_douban "
-        #                     "where movie_douban_to_netease.id_movie_douban is null ")
-        # for id, keyword in self.cursor.fetchall():
-        #     first_param = """{{s:"{}",type:"web"}}""".format(keyword)
-        #     fd = self.form_data.get_form_data(first_param=first_param, api_type=config.TYPE_WEAPI)
-        #     yield scrapy.FormRequest(url=config.URL_SEARCH_TIPS,
-        #                              formdata=fd,
-        #                              meta={'id': id, 'keyword': keyword}, callback=self.parse)
-        id = 35623243
-        first_param = "{}"
-        fd = self.form_data.get_form_data(first_param=first_param, api_type=config.TYPE_WEAPI)
-        yield scrapy.FormRequest(url='{}{}'.format(config.URL_ALBUM, id), formdata=fd,
-                                 meta={'id': id}, callback=self.parse)
+    def prepare(self, offset, limit):
+        """
+        获取请求列表
+
+        :param offset:
+        :param limit:
+        :return:
+        """
+        self.cursor.execute("select album_netease.id from album_netease "
+                            "left join song_netease_to_album_netease "
+                            "on album_netease.id=song_netease_to_album_netease.id_album_netease "
+                            "where song_netease_to_album_netease.id_album_netease is null "
+                            'limit {},{}'.format(offset, limit))
+        for id, in self.cursor.fetchall():
+            first_param = "{}"
+            fd = self.form_data.get_form_data(first_param=first_param, api_type=config.TYPE_WEAPI)
+            yield scrapy.FormRequest(url='{}{}'.format(config.URL_ALBUM, id), formdata=fd,
+                                     meta={'id': id}, callback=self.parse)
+        self.logger.info('get netease album\'s request list success,offset:{},limit:{}'.format(offset, limit))
 
     def parse(self, response):
         album_id = response.meta['id']
@@ -68,6 +70,20 @@ class AlbumNeteaseSpider(RedisSpider):
                 yield item_song
                 print('---------')
                 print(item_song)
+                for artist in song['ar']:
+                    item_artist = ArtistNetease()
+                    item_artist['id'] = artist['id']
+                    item_artist['name_zh'] = artist['name']
+                    yield item_artist
+                    item_artist_to_song = ArtistNeteaseToSongNetease()
+                    item_artist_to_song['id_artist_netease'] = artist['id']
+                    item_artist_to_song['id_song_netease'] = song['id']
+                    yield item_artist_to_song
             self.logger.info('get netease album\'s songs success,album_id:{}'.format(album_id))
         else:
             self.logger.warning('get netease album\'s songs failed,album_id:{}'.format(album_id))
+        # 获取新的请求列表
+        self.count += 1
+        if self.count % self.limit == 0:
+            for request in self.prepare(self.count, self.limit):
+                yield request

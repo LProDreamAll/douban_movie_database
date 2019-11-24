@@ -17,9 +17,13 @@ DB_HOST = '127.0.0.1'
 DB_NAME = 'er'
 DB_CHARSET = 'utf8mb4'
 
-# 批量处理数据限制
+# 批量处理数据插入限制
 # BATCH_NUM = 100
 BATCH_NUM = 2
+
+# 当前请求列表数量限制
+# REQUEST_NOW = 100
+REQUEST_NOW = 3
 
 # 随机请求头列表
 USER_AGENT_LIST = [

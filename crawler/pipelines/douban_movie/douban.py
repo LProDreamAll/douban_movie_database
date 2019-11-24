@@ -6,7 +6,7 @@
 from crawler.pipelines.base import BasePipeline
 
 
-class MovieDoubanPipeline(BasePipeline):
+class DoubanPipeline(BasePipeline):
     """
     豆瓣电影相关
 
@@ -48,6 +48,21 @@ class MovieDoubanPipeline(BasePipeline):
             },
             'ResourceMovie': {
                 'sql': 'insert into resource_movie(id_movie_douban, id_website_resource, id_type_resource, url_resource, name_zh) values (%s,%s,%s,%s,%s)'
+            },
+            'ImageCelebrityDouban': {
+                'sql': 'insert ignore into image_celebrity_douban values (%s,%s,%s,%s,%s)'
+            },
+            'CommentMovieDouban': {
+                'sql': 'insert ignore into comment_movie_douban values (%s,%s,%s,%s,%s)'
+            },
+            'UserDouban': {
+                'sql': 'insert ignore into user_douban values (%s,%s)'
+            },
+            'CelebrityDouban': {
+                'sql': 'replace into celebrity_douban values (%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+            },
+            'AliasCelebrityDouban': {
+                'sql': 'insert ignore into alias_celebrity_douban values (%s,%s,%s)'
             }
         }
         # 每个表添加data列表

@@ -684,7 +684,7 @@ create table user_douban
 # 豆瓣用户-角色
 create table user_douban_to_role
 (
-    id_user_douban int unsigned     not null,
+    id_user_douban varchar(255)     not null,
     id_role        tinyint unsigned not null,
 
     primary key (id_user_douban, id_role)
@@ -694,7 +694,7 @@ create table user_douban_to_role
 # 豆瓣用户-电影
 create table user_douban_to_movie_douban
 (
-    id_user_douban  int unsigned    not null,
+    id_user_douban  varchar(255)    not null,
     id_movie_douban bigint unsigned not null,
     # 用户对电影的评分 0.0 ～ 10.0
     score           decimal(3, 1)   not null default 0.0,
@@ -707,20 +707,11 @@ create table user_douban_to_movie_douban
 ) ENGINE = InnoDB
   default charset = utf8mb4;
 
-# 豆瓣用户-短评
-create table user_douban_to_comment_movie_douban
-(
-    id_user_douban          int unsigned    not null,
-    id_comment_movie_douban bigint unsigned not null,
-
-    primary key (id_user_douban, id_comment_movie_douban)
-) ENGINE = InnoDB
-  default charset = utf8mb4;
 
 # 用户-影评
 create table user_douban_to_review_movie_douban
 (
-    id_user_douban         int unsigned    not null,
+    id_user_douban         varchar(255)    not null,
     id_review_movie_douban bigint unsigned not null,
 
     primary key (id_user_douban, id_review_movie_douban)
@@ -730,7 +721,7 @@ create table user_douban_to_review_movie_douban
 # 豆瓣电影经典台词-用户
 create table user_douban_to_classic_douban
 (
-    id_user_douban    int unsigned    not null,
+    id_user_douban    varchar(255)    not null,
     id_classic_douban bigint unsigned not null,
     # 豆瓣用户收录时间
     record_datetime   datetime,
@@ -799,7 +790,6 @@ create table resource_movie
     index (id_movie_douban),
     index (id_website_resource),
     index (id_type_resource),
-    unique (url_resource(100)),
     index (name_zh)
 ) ENGINE = InnoDB
   default charset = utf8mb4;
@@ -1051,7 +1041,7 @@ CREATE TABLE place_scene_to_type_place_scene
 CREATE TABLE song_netease
 (
     id              bigint unsigned NOT NULL primary key,
-    # 推荐搜索之歌曲所属豆瓣电影ID 默认 0 （即由歌单或专辑得出的单曲不给出豆瓣ID）
+    # 推荐搜索之歌曲所属豆瓣电影ID （由歌单、专辑得到的歌曲此ID为0）
     id_movie_douban bigint unsigned not null default 0,
     # 歌曲中文名
     name_zh         varchar(255)    not null default '',
@@ -1063,6 +1053,18 @@ CREATE TABLE song_netease
 insert into song_netease
 values (0, 0, '');
 
+# 歌曲
+CREATE TABLE artist_netease
+(
+    id      bigint unsigned NOT NULL primary key,
+    # 歌手中文名
+    name_zh varchar(255)    not null default '',
+
+    index (name_zh)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+insert into artist_netease
+values (0, '');
 
 # 用户
 CREATE TABLE user_netease
@@ -1135,26 +1137,13 @@ CREATE TABLE comment_netease
     index (id_song_netease),
     index (id_user_netease),
     index (create_datetime desc),
-    index (vote desc)
+    index (agree_vote desc)
 ) ENGINE = INNODB
   DEFAULT CHARSET = UTF8MB4;
 
 
 
 # 1.网易云音乐关系表---------------------------------------
-
-
-# 豆瓣电影-网易云音乐
-CREATE TABLE movie_douban_to_netease
-(
-    id_movie_douban bigint unsigned  NOT NULL,
-    id_netease      bigint unsigned  NOT NULL,
-    # 决定id_netease为 1:歌曲 2:歌单 3:专辑
-    type_netease    tinyint unsigned not null default 0,
-
-    primary key (id_movie_douban, id_netease, type_netease)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
 
 # 歌曲-歌单
 CREATE TABLE song_netease_to_playlist_netease
@@ -1179,6 +1168,25 @@ CREATE TABLE song_netease_to_album_netease
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
+# 歌手-专辑
+CREATE TABLE artist_netease_to_album_netease
+(
+    id_artist_netease bigint unsigned NOT NULL,
+    id_album_netease  bigint unsigned NOT NULL,
+
+    primary key (id_artist_netease, id_album_netease)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+# 歌手-歌曲
+CREATE TABLE artist_netease_to_song_netease
+(
+    id_artist_netease bigint unsigned NOT NULL,
+    id_song_netease   bigint unsigned NOT NULL,
+
+    primary key (id_artist_netease, id_song_netease)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
 
 # 音乐 end ========================================================================================
 
@@ -1318,11 +1326,11 @@ values (23071, 1932),
 insert into celebrity_imdb(id)
 values (4082296),
        (0451148);
-insert into movie_douban(id)
-values (27119724),
-       (30242710),
-       (26786669),
-       (26794435);
+insert into movie_douban(id, name_zh)
+values (27119724, '小丑'),
+       (30242710, '他们已不再变老'),
+       (26786669, '决战中途岛'),
+       (26794435, '哪吒之魔童降世');
 insert into celebrity_douban(id)
 values (1018983),
        (1005822),
@@ -1336,7 +1344,7 @@ values (1018983),
 # 外键关系 start ========================================================================================
 
 
-# /*
+/*
 
 alter table movie_imdb
     add foreign key (id_type_video) references type_video (id);
@@ -1420,20 +1428,18 @@ alter table scene_detail_to_celebrity_scene
     add foreign key (id_scene_detail) references scene_detail (id);
 alter table scene_detail_to_celebrity_scene
     add foreign key (id_celebrity_scene) references celebrity_scene (id);
+
 alter table user_douban_to_role
     add foreign key (id_role) references role (id);
 alter table role_to_permission
     add foreign key (id_role) references role (id);
 alter table role_to_permission
     add foreign key (id_permission) references permission (id);
+
 alter table user_douban_to_movie_douban
     add foreign key (id_user_douban) references user_douban (id);
 alter table user_douban_to_movie_douban
     add foreign key (id_movie_douban) references movie_douban (id);
-alter table user_douban_to_comment_movie_douban
-    add foreign key (id_user_douban) references user_douban (id);
-alter table user_douban_to_comment_movie_douban
-    add foreign key (id_comment_movie_douban) references comment_movie_douban (id);
 alter table user_douban_to_review_movie_douban
     add foreign key (id_user_douban) references user_douban (id);
 alter table user_douban_to_review_movie_douban
@@ -1442,12 +1448,14 @@ alter table user_douban_to_classic_douban
     add foreign key (id_user_douban) references user_douban (id);
 alter table user_douban_to_classic_douban
     add foreign key (id_classic_douban) references classic_douban (id);
+
 alter table resource_movie
     add foreign key (id_movie_douban) references movie_douban (id);
 alter table resource_movie
     add foreign key (id_website_resource) references website_resource (id);
 alter table resource_movie
     add foreign key (id_type_resource) references type_resource (id);
+
 alter table image_celebrity_douban
     add foreign key (id_celebrity_douban) references celebrity_douban (id);
 alter table image_movie_douban
@@ -1456,6 +1464,7 @@ alter table image_place_scene
     add foreign key (id_place_scene) references place_scene (id);
 alter table image_scene_detail
     add foreign key (id_scene_detail) references scene_detail (id);
+
 alter table place_scene_to_type_place_scene
     add foreign key (id_place_scene) references place_scene (id);
 alter table place_scene_to_type_place_scene
@@ -1468,44 +1477,33 @@ alter table place_scene
     add foreign key (id_state_scene) references state_scene (id);
 alter table place_scene
     add foreign key (id_city_scene) references city_scene (id);
-alter table playlist_to_tag_netease
-    add foreign key (id_playlist) references playlist (id);
-alter table playlist_to_tag_netease
-    add foreign key (id_tag_netease) references tag_netease (id);
-alter table playlist
-    add foreign key (id_movie_douban) references movie_douban (id);
-alter table album
-    add foreign key (id_movie_douban) references movie_douban (id);
+
 alter table song_netease
     add foreign key (id_movie_douban) references movie_douban (id);
-alter table song_to_tag_netease
-    add foreign key (id_song) references song_netease (id);
-alter table song_to_tag_netease
-    add foreign key (id_tag_netease) references tag_netease (id);
-alter table song_to_playlist
-    add foreign key (id_song) references song_netease (id);
-alter table song_to_playlist
-    add foreign key (id_playlist) references playlist (id);
-alter table song_to_album
-    add foreign key (id_song) references song_netease (id);
-alter table song_to_album
-    add foreign key (id_album) references album (id);
-alter table user_netease_to_comment_netease
-    add foreign key (id_user_netease) references user_netease (id);
-alter table user_netease_to_comment_netease
-    add foreign key (id_comment_netease) references comment_netease (id);
-alter table song_to_comment_netease
-    add foreign key (id_song) references song_netease (id);
-alter table song_to_comment_netease
-    add foreign key (id_comment_netease) references comment_netease (id);
-alter table song_to_singer
-    add foreign key (id_song) references song_netease (id);
-alter table song_to_singer
-    add foreign key (id_singer) references singer (id);
-alter table album_to_singer
-    add foreign key (id_album) references album (id);
-alter table album_to_singer
-    add foreign key (id_singer) references singer (id);
+alter table playlist_netease
+    add foreign key (id_movie_douban) references movie_douban (id);
+alter table album_netease
+    add foreign key (id_movie_douban) references movie_douban (id);
+alter table comment_netease
+    add foreign key (id_song_netease) references song_netease (id);
+alter table comment_netease
+    add foreign key (id_user_netease) REFERENCES user_netease (id);
+alter table song_netease_to_playlist_netease
+    add foreign key (id_song_netease) references song_netease (id);
+alter table song_netease_to_playlist_netease
+    add foreign key (id_playlist_netease) references playlist_netease (id);
+alter table song_netease_to_album_netease
+    add foreign key (id_song_netease) references song_netease (id);
+alter table song_netease_to_album_netease
+    add foreign key (id_album_netease) references album_netease (id);
+alter table artist_netease_to_album_netease
+    add foreign key (id_album_netease) references album_netease (id);
+alter table artist_netease_to_album_netease
+    add foreign key (id_artist_netease) references artist_netease (id);
+alter table artist_netease_to_song_netease
+    add foreign key (id_song_netease) references song_netease (id);
+alter table artist_netease_to_song_netease
+    add foreign key (id_artist_netease) references artist_netease (id);
 
 */
 

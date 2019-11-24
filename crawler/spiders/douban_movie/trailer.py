@@ -6,14 +6,13 @@
 import json
 import re
 import scrapy
-from crawler.tools.database_pool import database_pool
 from crawler.configs import douban as config
-from scrapy_redis.spiders import RedisSpider
+from crawler.spiders.base import BaseSpider
 
 from crawler.items.douban import TrailerMovieDouban
 
 
-class TrailerDoubanSpider(RedisSpider):
+class TrailerDoubanSpider(BaseSpider):
     """
     豆瓣预告片相关
 
@@ -28,17 +27,20 @@ class TrailerDoubanSpider(RedisSpider):
         }
     }
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.conn = database_pool.connection()
-        self.cursor = self.conn.cursor()
+    def prepare(self, offset, limit):
+        """
+        获取请求列表
 
-    def start_requests(self):
-        self.cursor.execute("select id from trailer_movie_douban where url_video=''")
+        :param offset:
+        :param limit:
+        :return:
+        """
+        self.cursor.execute("select id from trailer_movie_douban where url_video='' limit {},{}".format(offset, limit))
         for id, in self.cursor.fetchall():
             yield scrapy.Request(url="{}{}/".format(config.URL_TRAILER_MOVIE, id),
                                  cookies=config.get_cookie_douban(),
                                  meta={'id': id}, callback=self.parse)
+        self.logger.info('get douban trailer\'s request list success,offset:{},limit:{}'.format(offset, limit))
 
     def parse(self, response):
         trailer_id = response.meta['id']
@@ -51,6 +53,11 @@ class TrailerDoubanSpider(RedisSpider):
             yield item_trailer
             print('---------------------')
             print(item_trailer)
-            self.logger.info('get douban trailer success,id:{}'.format(trailer_id))
+            self.logger.info('get douban trailer success,trailer_id:{}'.format(trailer_id))
         else:
-            self.logger.warning('get douban trailer failed,id:{}'.format(trailer_id))
+            self.logger.warning('get douban trailer failed,trailer_id:{}'.format(trailer_id))
+        # 获取新的请求列表
+        self.count += 1
+        if self.count % self.limit == 0:
+            for request in self.prepare(self.count, self.limit):
+                yield request

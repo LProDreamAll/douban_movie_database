@@ -5,18 +5,19 @@
 # ----------------------
 import json
 import scrapy
-from crawler.tools.database_pool import database_pool
 from crawler.tools.netease_encrypt import form_data
 from crawler.configs import netease as config
-from scrapy_redis.spiders import RedisSpider
+from crawler.spiders.base import BaseSpider
 
 from crawler.items.netease import SongNetease
 from crawler.items.netease import PlaylistNetease
 from crawler.items.netease import AlbumNetease
-from crawler.items.netease import MovieDoubanToNetease
+from crawler.items.netease import ArtistNetease
+from crawler.items.netease import ArtistNeteaseToSongNetease
+from crawler.items.netease import ArtistNeteaseToAlbumNetease
 
 
-class SearchNeteaseSpider(RedisSpider):
+class SearchNeteaseSpider(BaseSpider):
     """
     网易云音乐搜索相关
 
@@ -27,66 +28,74 @@ class SearchNeteaseSpider(RedisSpider):
     allowed_domains = ['music.163.com']
     custom_settings = {
         'ITEM_PIPELINES': {
-            'crawler.pipelines.netease_music.search.SearchNeteasePipeline': 300
+            'crawler.pipelines.netease.NeteasePipeline': 300
         }
     }
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.conn = database_pool.connection()
-        self.cursor = self.conn.cursor()
         self.form_data = form_data()
 
-    def start_requests(self):
-        # self.cursor.execute("select movie_douban.id,movie_douban.name_zh from movie_douban "
-        #                     "left join movie_douban_to_netease "
-        #                     "on movie_douban.id=movie_douban_to_netease.id_movie_douban "
-        #                     "where movie_douban_to_netease.id_movie_douban is null ")
-        # for id, keyword in self.cursor.fetchall():
-        #     first_param = """{{s:"{}",type:"web"}}""".format(keyword)
-        #     fd = self.form_data.get_form_data(first_param=first_param, api_type=config.TYPE_WEAPI)
-        #     yield scrapy.FormRequest(url=config.URL_SEARCH_TIPS,
-        #                              formdata=fd,
-        #                              meta={'id': id, 'keyword': keyword}, callback=self.parse)
-        keyword = '阿甘正传'
-        first_param_dict = config.EAPI_PARAMS
-        first_param_dict['s'] = keyword
-        first_param_dict['type'] = 1
-        first_param = json.dumps(first_param_dict, separators=(',', ':'))
-        fd = self.form_data.get_form_data(first_param=first_param, api_type=config.TYPE_EAPI,
-                                          eapi_url=config.URL_SEARCH_TIPS_EAPI)
-        yield scrapy.FormRequest(url=config.URL_SEARCH_TIPS,
-                                 formdata=fd, meta={'id': id, 'keyword': keyword}, callback=self.parse)
+    def prepare(self, offset, limit):
+        """
+        获取请求列表
+
+        :param offset:
+        :param limit:
+        :return:
+        """
+        self.cursor.execute("select movie_douban.id,movie_douban.name_zh from movie_douban "
+                            "left join song_netease "
+                            "on movie_douban.id=song_netease.id_movie_douban "
+                            "left join playlist_netease "
+                            "on movie_douban.id=playlist_netease.id_movie_douban "
+                            "left join album_netease "
+                            "on movie_douban.id=album_netease.id_movie_douban "
+                            "where song_netease.id_movie_douban is null "
+                            "and playlist_netease.id_movie_douban is null "
+                            "and album_netease.id_movie_douban is null "
+                            'limit {},{}'.format(offset, limit))
+        for id, keyword in self.cursor.fetchall():
+            first_param = """{{s:"{}",type:"web"}}""".format(keyword)
+            # 安卓API type=1:歌曲 10:专辑 1000:歌单
+            # first_param_dict = config.EAPI_PARAMS
+            # first_param_dict['s'] = keyword
+            # first_param_dict['type'] = 1000
+            # first_param = json.dumps(first_param_dict, separators=(',', ':'))
+            fd = self.form_data.get_form_data(first_param=first_param, api_type=config.TYPE_WEAPI, eapi_url=None)
+            yield scrapy.FormRequest(url=config.URL_SEARCH_TIPS, formdata=fd,
+                                     meta={'id': id, 'keyword': keyword}, callback=self.parse)
+        self.logger.info('get netease search\'s request list success,offset:{},limit:{}'.format(offset, limit))
 
     def parse(self, response):
         movie_id = response.meta['id']
         keyword = response.meta['keyword']
         content = json.loads(response.text)
-        result = content['result']
-        if 'result' in content and ('songs' in result or 'playlists' in result or 'albums' in result):
+        if 'result' in content and (
+                'songs' in content['result'] or 'playlists' in content['result'] or 'albums' in content['result']):
+            result = content['result']
             # 歌曲
             if 'songs' in result:
                 for song in result['songs']:
-                    item_movie_to_netease = MovieDoubanToNetease()
-                    item_movie_to_netease['id_movie_douban'] = movie_id
-                    item_movie_to_netease['id_netease'] = song['id']
-                    item_movie_to_netease['type_netease'] = 1
-                    yield item_movie_to_netease
                     item_song = SongNetease()
                     item_song['id'] = song['id']
                     item_song['id_movie_douban'] = movie_id
                     item_song['name_zh'] = song['name']
                     yield item_song
-                    print('---------------')
+                    print('song ---------------')
                     print(item_song)
+                    for artist in song['artists']:
+                        item_artist = ArtistNetease()
+                        item_artist['id'] = artist['id']
+                        item_artist['name_zh'] = artist['name']
+                        yield item_artist
+                        item_artist_to_song = ArtistNeteaseToSongNetease()
+                        item_artist_to_song['id_artist_netease'] = artist['id']
+                        item_artist_to_song['id_song_netease'] = song['id']
+                        yield item_artist_to_song
             # 歌单
             if 'playlists' in result:
                 for playlist in result['playlists']:
-                    item_movie_to_netease = MovieDoubanToNetease()
-                    item_movie_to_netease['id_movie_douban'] = movie_id
-                    item_movie_to_netease['id_netease'] = playlist['id']
-                    item_movie_to_netease['type_netease'] = 2
-                    yield item_movie_to_netease
                     item_playlist = PlaylistNetease()
                     item_playlist['id'] = playlist['id']
                     item_playlist['id_movie_douban'] = movie_id
@@ -96,24 +105,32 @@ class SearchNeteaseSpider(RedisSpider):
                     item_playlist['url_cover'] = playlist['coverImgUrl']
                     item_playlist['description'] = playlist['description']
                     yield item_playlist
-                    print('---------------')
+                    print('playlist ---------------')
                     print(item_playlist)
             # 专辑
             if 'albums' in result:
                 for album in result['albums']:
-                    item_movie_to_netease = MovieDoubanToNetease()
-                    item_movie_to_netease['id_movie_douban'] = movie_id
-                    item_movie_to_netease['id_netease'] = album['id']
-                    item_movie_to_netease['type_netease'] = 3
-                    yield item_movie_to_netease
                     item_album = AlbumNetease()
                     item_album['id'] = album['id']
                     item_album['id_movie_douban'] = movie_id
                     item_album['name_zh'] = album['name']
                     item_album['total'] = album['size']
                     yield item_album
-                    print('----------------')
+                    print('album ----------------')
                     print(item_album)
+                    item_artist = ArtistNetease()
+                    item_artist['id'] = album['artist']['id']
+                    item_artist['name_zh'] = album['artist']['name']
+                    yield item_artist
+                    item_artist_to_album = ArtistNeteaseToAlbumNetease()
+                    item_artist_to_album['id_artist_netease'] = album['artist']['id']
+                    item_artist_to_album['id_album_netease'] = album['id']
+                    yield item_artist_to_album
             self.logger.info('get netease search success,movie_id:{},keyword:{}'.format(movie_id, keyword))
         else:
             self.logger.warning('get netease search failed,movie_id:{},keyword:{}'.format(movie_id, keyword))
+        # 获取新的请求列表
+        self.count += 1
+        if self.count % self.limit == 0:
+            for request in self.prepare(self.count, self.limit):
+                yield request

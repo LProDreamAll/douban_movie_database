@@ -8,6 +8,7 @@ import scrapy
 from crawler.tools.database_pool import database_pool
 from crawler.configs import douban as config
 from scrapy_redis.spiders import RedisSpider
+from crawler.spiders.base import BaseSpider
 
 from crawler.items.douban import CelebrityDouban
 from crawler.items.douban import AliasCelebrityDouban
@@ -15,7 +16,7 @@ from crawler.items.douban import MovieDoubanToAwardMovie
 from crawler.items.douban import AwardMovie
 
 
-class CelebrityDoubanSpider(RedisSpider):
+class CelebrityDoubanSpider(BaseSpider):
     """
     豆瓣影人相关
 
@@ -26,21 +27,25 @@ class CelebrityDoubanSpider(RedisSpider):
     allowed_domains = ['movie.douban.com']
     custom_settings = {
         'ITEM_PIPELINES': {
-            'crawler.pipelines.douban_movie.celebrity.CelebrityDoubanPipeline': 300
+            'crawler.pipelines.douban_movie.douban.DoubanPipeline': 300
         }
     }
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.conn = database_pool.connection()
-        self.cursor = self.conn.cursor()
+    def prepare(self, offset, limit):
+        """
+        获取请求列表
 
-    def start_requests(self):
-        self.cursor.execute('select id from celebrity_douban where is_updated=0')
+        :param offset:
+        :param limit:
+        :return:
+        """
+        self.cursor.execute('select id from celebrity_douban where is_updated=0 '
+                            'limit {},{}'.format(offset, limit))
         for id, in self.cursor.fetchall():
             yield scrapy.Request(url="{}{}/".format(config.URL_CELEBRITY, id),
                                  cookies=config.get_cookie_douban(),
                                  meta={'id': id}, callback=self.parse)
+        self.logger.info('get douban celebrity\'s request list success,offset:{},limit:{}'.format(offset, limit))
 
     def parse(self, response):
         celebrity_id = response.meta['id']
@@ -122,3 +127,8 @@ class CelebrityDoubanSpider(RedisSpider):
             self.logger.info('get douban celebrity success,id:{}'.format(celebrity_id))
         else:
             self.logger.warning('get douban celebrity failed,id:{}'.format(celebrity_id))
+        # 获取新的请求列表
+        self.count += 1
+        if self.count % self.limit == 0:
+            for request in self.prepare(self.count, self.limit):
+                yield request

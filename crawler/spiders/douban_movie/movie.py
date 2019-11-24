@@ -5,9 +5,8 @@
 # ----------------------
 import re
 import scrapy
-from crawler.tools.database_pool import database_pool
 from crawler.configs import douban as config
-from scrapy_redis.spiders import RedisSpider
+from crawler.spiders.base import BaseSpider
 
 from crawler.items.douban import MovieDouban
 from crawler.items.douban import AliasMovieDouban
@@ -21,7 +20,7 @@ from crawler.items.douban import TrailerMovieDouban
 from crawler.items.douban import ResourceMovie
 
 
-class MovieDoubanSpider(RedisSpider):
+class MovieDoubanSpider(BaseSpider):
     """
     豆瓣电影相关
 
@@ -32,21 +31,24 @@ class MovieDoubanSpider(RedisSpider):
     allowed_domains = ['movie.douban.com']
     custom_settings = {
         'ITEM_PIPELINES': {
-            'crawler.pipelines.douban_movie.movie.MovieDoubanPipeline': 300
+            'crawler.pipelines.douban_movie.douban.DoubanPipeline': 300
         }
     }
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.conn = database_pool.connection()
-        self.cursor = self.conn.cursor()
+    def prepare(self, offset, limit):
+        """
+        获取请求列表
 
-    def start_requests(self):
-        self.cursor.execute('select id from movie_douban where is_updated=0')
+        :param offset:
+        :param limit:
+        :return:
+        """
+        self.cursor.execute('select id from movie_douban where is_updated=0 limit {},{}'.format(offset, limit))
         for id, in self.cursor.fetchall():
             yield scrapy.Request(url="{}{}/".format(config.URL_MOVIE, id),
                                  cookies=config.get_cookie_douban(),
                                  meta={'id': id}, callback=self.parse)
+        self.logger.info('get douban movie\'s request list success,offset:{},limit:{}'.format(offset, limit))
 
     def parse(self, response):
         movie_id = response.meta['id']
@@ -68,10 +70,8 @@ class MovieDoubanSpider(RedisSpider):
             start_year = response.xpath('//h1/span[@class="year"]/text()').get()
             item_movie['start_year'] = re.search('[(](\d+)[)]',
                                                  start_year).group(1) if start_year is not None else 0
-            # 中文名
             name_zh = re.search('[\u4e00-\u9fff()\d\s]*', title).group().strip() if title is not None else ''
             item_movie['name_zh'] = name_zh
-            # 原始名
             item_movie['name_origin'] = re.search('[\u4e00-\u9fff()\d\s]*(.*)',
                                                   title).group(1).strip() if title is not None else ''
             runtime = info.xpath('span[@property="v:runtime"]/@content').get()
@@ -215,3 +215,8 @@ class MovieDoubanSpider(RedisSpider):
             self.logger.info('get douban movie success,id:{}'.format(movie_id))
         else:
             self.logger.warning('get douban movie failed,id:{}'.format(movie_id))
+        # 获取新的请求列表
+        self.count += 1
+        if self.count % self.limit == 0:
+            for request in self.prepare(self.count, self.limit):
+                yield request
