@@ -17,7 +17,7 @@ from crawler.items.douban import TagMovie
 from crawler.items.douban import AwardMovie
 from crawler.items.douban import MovieDoubanToAwardMovie
 from crawler.items.douban import TrailerMovieDouban
-from crawler.items.douban import ResourceMovie
+from crawler.items.resource import ResourceMovie
 
 
 class MovieDoubanSpider(BaseSpider):
@@ -67,9 +67,9 @@ class MovieDoubanSpider(BaseSpider):
                 item_movie['id_type_video'] = 4
             imdb_id = info.xpath('span[text()="IMDb链接:"]/following-sibling::a/text()').get()
             item_movie['id_movie_imdb'] = re.search('tt(\d+)', imdb_id).group(1) if imdb_id is not None else 0
-            start_year = response.xpath('//h1/span[@class="year"]/text()').get()
-            item_movie['start_year'] = re.search('[(](\d+)[)]',
-                                                 start_year).group(1) if start_year is not None else 0
+            year = response.xpath('//h1/span[@class="year"]/text()').get()
+            start_year = re.search('[(](\d+)[)]', year).group(1) if year is not None else 0
+            item_movie['start_year'] = start_year
             name_zh = re.search('[\u4e00-\u9fff()\d\s]*', title).group().strip() if title is not None else ''
             item_movie['name_zh'] = name_zh
             item_movie['name_origin'] = re.search('[\u4e00-\u9fff()\d\s]*(.*)',
@@ -207,8 +207,12 @@ class MovieDoubanSpider(BaseSpider):
                     item_resource['id_type_resource'] = 1
                     if type in config.TYPE_RESOURCE_LIST:
                         item_resource['id_type_resource'] = config.TYPE_RESOURCE_LIST.index(type)
-                    item_resource['url_resource'] = resource.xpath('a/@href').get()
                     item_resource['name_zh'] = name_zh
+                    item_resource['create_year'] = start_year
+                    item_resource['name_origin'] = name_zh
+                    url_resource = resource.xpath('a/@href').get()
+                    item_resource['url_resource'] = re.search('https://www\.douban\.com/link2/\?url=(.*)',
+                                                              url_resource).group(1) if url_resource is not None else ''
                     print('--------------------')
                     print(item_resource)
                     yield item_resource

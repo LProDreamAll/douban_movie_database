@@ -744,11 +744,10 @@ create table user_douban_to_classic_douban
 # 电影资源网站 
 create table website_resource
 (
-    id          smallint unsigned not null auto_increment primary key,
+    # <100:正版在线 >100:盗版
+    id          smallint unsigned not null primary key,
     # 网站中文名
     name_zh     varchar(255)      not null default '',
-    # 网站是否为正版合法网站 0-否 1-是
-    is_legal    tinyint(1)        not null default 0,
     # 网站官网地址
     website_src varchar(255)      not null default '',
 
@@ -762,7 +761,8 @@ values (1, '未知');
 # 电影资源类型 (免费播放、vip免费播放、磁力链接...)
 create table type_resource
 (
-    id      smallint unsigned not null auto_increment primary key,
+    # <100:在线  >100:离线
+    id      smallint unsigned not null primary key,
     # 资源类型中文名
     name_zh varchar(255)      not null default '',
 
@@ -778,19 +778,26 @@ create table resource_movie
     id                  bigint unsigned   not null auto_increment primary key,
     # 资源对应的电影
     id_movie_douban     bigint unsigned   not null default 0,
-    # 资源所属网站
+    # 资源所属网站 <100:正版在线 >100:盗版
     id_website_resource smallint unsigned not null default 1,
-    # 资源所属类型
+    # 资源所属类型 <100:在线  >100:离线
     id_type_resource    smallint unsigned not null default 1,
-    # 资源链接
-    url_resource        varchar(1000)     not null default '',
-    # 资源中文名
+    # 资源中文名(电影名)
     name_zh             varchar(255)      not null default '',
+    # 电影年代
+    create_year         year,
+    # 资源原始名
+    name_origin         varchar(255)      not null default '',
+    # 资源链接 id_website < 100 则url前缀拼接 https://www.douban.com/link2/?url=
+    url_resource        varchar(1000)     not null default '',
+
 
     index (id_movie_douban),
     index (id_website_resource),
     index (id_type_resource),
-    index (name_zh)
+    index (name_zh),
+    index (create_year),
+    unique (url_resource(255))
 ) ENGINE = InnoDB
   default charset = utf8mb4;
 insert into resource_movie(id, name_zh)
@@ -1245,15 +1252,22 @@ values (2, '爱奇艺视频', 1, 'https://www.iqiyi.com'),
        (6, '优酷视频', 1, 'https://www.youku.com'),
        (7, '1905电影网', 1, 'https://vip.1905.com'),
        (8, '芒果TV', 1, 'https://www.mgtv.com'),
-       (101, '电影天堂', 0, '');
+       (101, '电影天堂', 0, 'https://www.dy2018.com'),
+       (102, '', 0, ''),
+       (103, '', 0, ''),
+       (104, '', 0, ''),
+       (105, '', 0, ''),
+       (106, '', 0, '');
 
 insert into type_resource
 values (2, '免费观看'),
        (3, 'VIP免费观看'),
        (4, '单片付费'),
        (5, '用劵/单片付费'),
-       (11, '磁力链接'),
-       (12, '迅雷链接');
+
+       (101, '在线观看'),
+       (102, '磁力链接'),
+       (103, '迅雷链接');
 
 
 insert into profession

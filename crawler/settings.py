@@ -28,9 +28,6 @@ ROBOTSTXT_OBEY = False
 
 # 项目管道
 ITEM_PIPELINES = {
-    # 'crawler.pipelines.scene.ScenePipeline': 300,
-    # 'crawler.pipelines.search.SearchPipeline': 400,
-    # 'crawler.pipelines.movie_douban.MovieDoubanPipeline': 500,
     # for redis
     'scrapy_redis.pipelines.RedisPipeline': 100
 }

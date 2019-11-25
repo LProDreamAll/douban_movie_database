@@ -117,13 +117,6 @@ class ImageCelebrityDouban(scrapy.Item):
     width = scrapy.Field()
 
 
-class ResourceMovie(scrapy.Item):
-    id_movie_douban = scrapy.Field()
-    id_website_resource = scrapy.Field()
-    id_type_resource = scrapy.Field()
-    url_resource = scrapy.Field()
-    name_zh = scrapy.Field()
-
 
 # 评论相关
 
