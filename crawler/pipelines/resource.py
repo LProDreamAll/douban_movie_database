@@ -17,8 +17,8 @@ class ResourcePipeline(BasePipeline):
         # 待处理数据列表
         self.item_dict = {
             'ResourceMovie': {
-                'sql': 'insert into resource_movie(id_movie_douban, id_website_resource, id_type_resource, name_zh,create_year,name_origin,url_resource) '
-                       ' values (%s,%s,%s,%s,%s,%s,%s)'
+                'sql': 'insert into resource_movie(id_movie_douban,id_movie_imdb ,id_website_resource, id_type_resource, name_zh,create_year,name_origin,url_resource) '
+                       ' values (%s,%s,%s,%s,%s,%s,%s,%s)'
             },
         }
         # 每个表添加data列表

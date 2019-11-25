@@ -27,8 +27,9 @@ spiders = {
     31: 'scene',
 
     41: 'dygod_resource',
+    42: 'loldytt_resource',
 
 }
 cmdline.execute('scrapy crawl {}'.format(spiders.get(
-    41
+    42
 )).split())

@@ -47,8 +47,8 @@ class DoubanPipeline(BasePipeline):
                 'sql': 'insert ignore into trailer_movie_douban values (%s,%s,%s)'
             },
             'ResourceMovie': {
-                'sql': 'insert into resource_movie(id_movie_douban, id_website_resource, id_type_resource, name_zh,create_year,name_origin,url_resource) '
-                       ' values (%s,%s,%s,%s,%s,%s,%s)'
+                'sql': 'insert into resource_movie(id_movie_douban,id_movie_imdb ,id_website_resource, id_type_resource, name_zh,create_year,name_origin,url_resource) '
+                       ' values (%s,%s,%s,%s,%s,%s,%s,%s)'
             },
             'ImageCelebrityDouban': {
                 'sql': 'insert ignore into image_celebrity_douban values (%s,%s,%s,%s,%s)'

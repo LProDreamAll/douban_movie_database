@@ -769,8 +769,6 @@ create table type_resource
     index (name_zh)
 ) ENGINE = InnoDB
   default charset = utf8mb4;
-insert into type_resource
-values (1, '未知');
 
 # 电影资源
 create table resource_movie
@@ -778,10 +776,12 @@ create table resource_movie
     id                  bigint unsigned   not null auto_increment primary key,
     # 资源对应的电影
     id_movie_douban     bigint unsigned   not null default 0,
+    # 资源对应IMDB的ID
+    id_movie_imdb       bigint unsigned   not null default 0,
     # 资源所属网站 <100:正版在线 >100:盗版
     id_website_resource smallint unsigned not null default 1,
     # 资源所属类型 <100:在线  >100:离线
-    id_type_resource    smallint unsigned not null default 1,
+    id_type_resource    smallint unsigned not null default 100,
     # 资源中文名(电影名)
     name_zh             varchar(255)      not null default '',
     # 电影年代
@@ -793,7 +793,8 @@ create table resource_movie
 
 
     index (id_movie_douban),
-    index (id_website_resource),
+    index (id_movie_imdb),
+    index (id_website_resource)
     index (id_type_resource),
     index (name_zh),
     index (create_year),
@@ -1245,30 +1246,38 @@ values (1, '未知', 'unknown'),
        (10, '', 'video game');
 
 insert into website_resource
-values (2, '爱奇艺视频', 1, 'https://www.iqiyi.com'),
-       (3, '腾讯视频', 1, 'https://v.qq.com'),
-       (4, '哔哩哔哩', 1, 'https://www.bilibili.com'),
-       (5, '搜狐视频', 1, 'https://tv.sohu.com'),
-       (6, '优酷视频', 1, 'https://www.youku.com'),
-       (7, '1905电影网', 1, 'https://vip.1905.com'),
-       (8, '芒果TV', 1, 'https://www.mgtv.com'),
-       (101, '电影天堂', 0, 'https://www.dy2018.com'),
-       (102, '', 0, ''),
-       (103, '', 0, ''),
-       (104, '', 0, ''),
-       (105, '', 0, ''),
-       (106, '', 0, '');
+values (2, '爱奇艺视频', 'https://www.iqiyi.com'),
+       (3, '腾讯视频', 'https://v.qq.com'),
+       (4, '哔哩哔哩', 'https://www.bilibili.com'),
+       (5, '搜狐视频', 'https://tv.sohu.com'),
+       (6, '优酷视频', 'https://www.youku.com'),
+       (7, '1905电影网', 'https://vip.1905.com'),
+       (8, '芒果TV', 'https://www.mgtv.com'),
+
+       (101, '电影天堂', 'https://www.dy2018.com'),
+       (102, 'LOL电影天堂', 'https://www.loldytt.tv'),
+       (103, '', ''),
+       (104, '', ''),
+       (105, '', ''),
+       (106, '', '');
 
 insert into type_resource
-values (2, '免费观看'),
-       (3, 'VIP免费观看'),
-       (4, '单片付费'),
-       (5, '用劵/单片付费'),
+values (1, '免费观看'),
+       (2, 'VIP免费观看'),
+       (3, '单片付费'),
+       (4, '用劵/单片付费'),
+
+       (100, '未知'),
 
        (101, '在线观看'),
-       (102, '磁力链接'),
-       (103, '迅雷链接');
 
+       (111, 'BluRay'),
+       (112, '1080p'),
+       (113, '1280超清'),
+       (114, '1024超清'),
+       (115, '720p'),
+       (116, '1280高清'),
+       (117, '1024高清');
 
 insert into profession
 values (1, '未知',
@@ -1469,6 +1478,9 @@ alter table resource_movie
     add foreign key (id_website_resource) references website_resource (id);
 alter table resource_movie
     add foreign key (id_type_resource) references type_resource (id);
+alter table resource_movie
+    add foreign key (id_movie_imdb) references movie_imdb (id);
+
 
 alter table image_celebrity_douban
     add foreign key (id_celebrity_douban) references celebrity_douban (id);

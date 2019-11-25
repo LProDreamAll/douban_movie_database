@@ -72,8 +72,9 @@ class DygodResourceSpider(BaseSpider):
             for url in online_list + offline_list:
                 item_resource = ResourceMovie()
                 item_resource['id_movie_douban'] = 0
+                item_resource['id_movie_imdb'] = 0
                 item_resource['id_website_resource'] = 101
-                item_resource['id_type_resource'] = config.parse_type(url)
+                item_resource['id_type_resource'] = 101 if config.URL_DYGOD in url else 100
                 item_resource['name_zh'] = name
                 year_maybe = response.xpath('//div[@id="Zoom"]/text()').getall()
                 for index, year in enumerate(year_maybe):

@@ -5,26 +5,69 @@
 # ----------------------
 import re
 
+# 电影天堂
 URL_DYGOD = 'https://www.dy2018.com'
 
+# LOL电影天堂
+URL_LOLDYTT = 'https://www.loldytt.tv'
+
+# LOL电影天堂 电影类型列表
+LOLDYTT_TYPE_LIST = [
+    'Dongzuodianying',
+    'Kehuandianying',
+    'Kongbudianying',
+    'Xijudianying',
+    'Aiqingdianying',
+    'Juqingdianying',
+    'Zhanzhengdianying',
+    'Anime',
+    'Zuixinzongyi',
+    'Dianshiju',
+    'Zuixinmeiju',
+    'Zuixinhanju',
+    'Zuixingangju',
+    'Ouxiangju',
+    'Zuixinriju',
+    'Taiguodianshiju'
+]
+
 TYPE_LIST = {
-    1: '未知',
-    2: '免费观看',
-    3: 'VIP免费观看',
-    4: '单片付费',
-    5: '用劵/单片付费',
+    1: '免费观看',
+    2: 'VIP免费观看',
+    3: '单片付费',
+    4: '用劵/单片付费',
+
+    100: '未知',
 
     101: '在线观看',
-    102: '磁力链接',
-    103: '迅雷链接',
 
-    111: 'BD在线观看',
+    111: 'BluRay',
+    112: '1080p',
+    113: '1280超清',
+    114: '1024超清',
+    115: '720p',
+    116: '1280高清',
+    117: '1024高清',
 }
 
 
 # 解析资源类型
-def parse_type(url):
-    if re.match('magnet', url) is not None:
-        return 102
-    elif re.match('https://www.dy2018.com', url) is not None:
+def parse_type(name):
+    if '1280' in name:
+        if '超清' in name:
+            return 113
+        elif '高清' in name:
+            return 116
+    elif '1024' in name:
+        if '超清' in name:
+            return 114
+        elif '高清' in name:
+            return 117
+    elif '1080p' in name:
+        return 112
+    elif '720p' in name:
+        return 115
+    elif '蓝光' in name or 'BluRay' in name:
         return 111
+    else:
+        return 100

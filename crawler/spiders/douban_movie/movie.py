@@ -65,8 +65,9 @@ class MovieDoubanSpider(BaseSpider):
                 item_movie['id_type_video'] = 3
             elif '短片' in type_list:
                 item_movie['id_type_video'] = 4
-            imdb_id = info.xpath('span[text()="IMDb链接:"]/following-sibling::a/text()').get()
-            item_movie['id_movie_imdb'] = re.search('tt(\d+)', imdb_id).group(1) if imdb_id is not None else 0
+            imdb = info.xpath('span[text()="IMDb链接:"]/following-sibling::a/text()').get()
+            imdb_id = re.search('tt(\d+)', imdb).group(1) if imdb is not None else 0
+            item_movie['id_movie_imdb'] = imdb_id
             year = response.xpath('//h1/span[@class="year"]/text()').get()
             start_year = re.search('[(](\d+)[)]', year).group(1) if year is not None else 0
             item_movie['start_year'] = start_year
@@ -101,7 +102,7 @@ class MovieDoubanSpider(BaseSpider):
             # 电影别名
             alias_label = info.xpath('span[text()="又名:"]').get()
             if alias_label is not None:
-                alias_position = 1 if imdb_id is None else 3
+                alias_position = 1 if imdb is None else 3
                 alias_list = info.xpath('text()[last()-{}]'.format(alias_position)).get().split('/')
                 for alias in alias_list:
                     item_alias = AliasMovieDouban()
@@ -199,6 +200,7 @@ class MovieDoubanSpider(BaseSpider):
                 for resource in resource_list:
                     item_resource = ResourceMovie()
                     item_resource['id_movie_douban'] = movie_id
+                    item_resource['id_movie_douban'] = imdb_id
                     item_resource['id_website_resource'] = 1
                     website = resource.xpath('a/text()').get().strip()
                     if website in config.WEBSITE_RESOURCE_LIST:
