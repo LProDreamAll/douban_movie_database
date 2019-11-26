@@ -30,8 +30,9 @@ spiders = {
     42: 'loldytt_resource',
     43: 'btbtdy_resource',
     44: 'xl720_resource',
+    45: 'hao6v_resource',
 
 }
 cmdline.execute('scrapy crawl {}'.format(spiders.get(
-    44
+    45
 )).split())

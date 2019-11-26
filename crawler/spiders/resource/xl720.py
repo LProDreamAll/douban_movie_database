@@ -41,7 +41,7 @@ class Xl720ResourceSpider(BaseSpider):
             for movie in movie_list:
                 url = movie.xpath('@href').get()
                 if url is not None:
-                    movie_id = re.search('(\d+).html', url).group(1)
+                    movie_id = re.search('(\d+)\.html', url).group(1)
                     title = re.search('([\u4e00-\u9fff()\d\s]*)\s.*\((\d+)\)', movie.xpath('text()').get())
                     yield scrapy.Request(url=url,
                                          meta={'movie_id': movie_id, 'title': title.group(1), 'year': title.group(2)},

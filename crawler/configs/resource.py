@@ -17,25 +17,8 @@ URL_BTBTDY = 'http://www.btbtdy.me'
 # 迅雷电影天堂
 URL_XL720 = 'https://www.xl720.com'
 
-# LOL电影天堂 电影类型列表
-LOLDYTT_TYPE_LIST = [
-    'Dongzuodianying',
-    'Kehuandianying',
-    'Kongbudianying',
-    'Xijudianying',
-    'Aiqingdianying',
-    'Juqingdianying',
-    'Zhanzhengdianying',
-    'Anime',
-    'Zuixinzongyi',
-    'Dianshiju',
-    'Zuixinmeiju',
-    'Zuixinhanju',
-    'Zuixingangju',
-    'Ouxiangju',
-    'Zuixinriju',
-    'Taiguodianshiju'
-]
+# 6v电影网
+URL_HAO6V = 'http://www.hao6v.com'
 
 TYPE_LIST = {
     1: '免费观看',
@@ -84,3 +67,43 @@ def parse_type(name):
         return 111
     else:
         return 100
+
+
+# LOL电影天堂 电影类型列表
+LOLDYTT_TYPE_LIST = [
+    'Dongzuodianying',
+    'Kehuandianying',
+    'Kongbudianying',
+    'Xijudianying',
+    'Aiqingdianying',
+    'Juqingdianying',
+    'Zhanzhengdianying',
+    'Anime',
+    'Zuixinzongyi',
+    'Dianshiju',
+    'Zuixinmeiju',
+    'Zuixinhanju',
+    'Zuixingangju',
+    'Ouxiangju',
+    'Zuixinriju',
+    'Taiguodianshiju',
+]
+
+# 6v电影网类型列表
+HAO6V_TYPE_LIST = [
+    'xiju',
+    'dongzuo',
+    'aiqing',
+    'kehuan',
+    'qihuan',
+    'shenmi',
+    'huanxiang',
+    'kongbu',
+    'zhanzheng',
+    'maoxian',
+    'jingsong',
+    'juqingpian',
+    'zhuanji',
+    'lishi',
+    'jilu',
+]

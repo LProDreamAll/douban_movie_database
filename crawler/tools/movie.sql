@@ -1258,7 +1258,7 @@ values (2, '爱奇艺视频', 'https://www.iqiyi.com'),
        (102, 'LOL电影天堂', 'https://www.loldytt.tv'),
        (103, 'BT电影天堂', 'http://www.btbtdy.me'),
        (104, 'xl720',    'https://www.xl720.com'),
-       (105, '', ''),
+       (105, '6v电影网', 'http://www.hao6v.com'),
        (106, '', '');
 
 insert into type_resource
