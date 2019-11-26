@@ -65,7 +65,7 @@ class DygodResourceSpider(BaseSpider):
     def parse_movie(self, response):
         movie_id = response.meta['movie_id']
         title = response.xpath('//h1/text()').get()
-        name = re.search('《(.*)》', title).group(1) if title is not None else None
+        name = re.search('《(.*)》', title).group(1) if title is not None else ''
         if title is not None:
             online_list = response.xpath('//div[@class="player_list"]//a/@href').getall()
             offline_list = response.xpath('//td[@style]/a/@href').getall()

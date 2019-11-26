@@ -794,7 +794,7 @@ create table resource_movie
 
     index (id_movie_douban),
     index (id_movie_imdb),
-    index (id_website_resource)
+    index (id_website_resource),
     index (id_type_resource),
     index (name_zh),
     index (create_year),
@@ -1256,8 +1256,8 @@ values (2, '爱奇艺视频', 'https://www.iqiyi.com'),
 
        (101, '电影天堂', 'https://www.dy2018.com'),
        (102, 'LOL电影天堂', 'https://www.loldytt.tv'),
-       (103, '', ''),
-       (104, '', ''),
+       (103, 'BT电影天堂', 'http://www.btbtdy.me'),
+       (104, 'xl720',    'https://www.xl720.com'),
        (105, '', ''),
        (106, '', '');
 
@@ -1270,6 +1270,7 @@ values (1, '免费观看'),
        (100, '未知'),
 
        (101, '在线观看'),
+       (102, '网盘'),
 
        (111, 'BluRay'),
        (112, '1080p'),

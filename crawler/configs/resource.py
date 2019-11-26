@@ -11,6 +11,12 @@ URL_DYGOD = 'https://www.dy2018.com'
 # LOL电影天堂
 URL_LOLDYTT = 'https://www.loldytt.tv'
 
+# BT电影天堂
+URL_BTBTDY = 'http://www.btbtdy.me'
+
+# 迅雷电影天堂
+URL_XL720 = 'https://www.xl720.com'
+
 # LOL电影天堂 电影类型列表
 LOLDYTT_TYPE_LIST = [
     'Dongzuodianying',
@@ -40,6 +46,7 @@ TYPE_LIST = {
     100: '未知',
 
     101: '在线观看',
+    102: '网盘',
 
     111: 'BluRay',
     112: '1080p',
@@ -53,7 +60,13 @@ TYPE_LIST = {
 
 # 解析资源类型
 def parse_type(name):
-    if '1280' in name:
+    if name is None:
+        return 100
+    if '在线' in name or '播放' in name:
+        return 101
+    elif '网盘' in name:
+        return 102
+    elif '1280' in name:
         if '超清' in name:
             return 113
         elif '高清' in name:
@@ -63,9 +76,9 @@ def parse_type(name):
             return 114
         elif '高清' in name:
             return 117
-    elif '1080p' in name:
+    elif '1080' in name:
         return 112
-    elif '720p' in name:
+    elif '720' in name:
         return 115
     elif '蓝光' in name or 'BluRay' in name:
         return 111

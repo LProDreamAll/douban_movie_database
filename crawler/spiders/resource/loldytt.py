@@ -76,7 +76,7 @@ class LoldyttResourceSpider(BaseSpider):
                 description = response.xpath('//*[@id="juqing"]//text()').getall()
                 flag_year = False
                 flag_imdb = False
-                create_year = None
+                create_year = 0000
                 imdb_id = 0
                 for detail in description:
                     if flag_year and flag_imdb:
