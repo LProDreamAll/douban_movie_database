@@ -15,6 +15,11 @@ class Hao6vResourceSpider(BaseSpider):
     """
     6v电影网资源相关
 
+    用法:
+    scrapy crawl hao6v_resource -a type={}
+    - all           该网站所有电影
+    - new           该网站最新电影
+
     """
     name = 'hao6v_resource'
     # start_url存放容器改为redis list
@@ -26,20 +31,21 @@ class Hao6vResourceSpider(BaseSpider):
         }
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, type=None, **kwargs):
         super().__init__(**kwargs)
-        self.type_sum = len(config.HAO6V_TYPE_LIST)
+        self.type = type
+        self.type_new = 'new'
+        # 仅爬取最新电影的页数 (每种类型)
+        self.new_max_pages = 10
 
     def start_requests(self):
-        yield scrapy.Request(url='{}/s/{}/'.format(config.URL_HAO6V, config.HAO6V_TYPE_LIST[0]),
-                             meta={'type_id': 0, 'page_id': 1}, callback=self.parse_movie_list)
+        for type in config.HAO6V_TYPE_LIST:
+            yield scrapy.Request(url='{}/s/{}/'.format(config.URL_HAO6V, type),
+                                 meta={'type': type, 'page_id': 1}, callback=self.parse_movie_list)
 
     def parse_movie_list(self, response):
-        type_id = response.meta['type_id']
+        type = response.meta['type']
         page_id = response.meta['page_id']
-        # 爬虫结束
-        if type_id >= self.type_sum:
-            self.crawler.engine.close_spider(self, 'get hao6v resource finished')
         # 电影列表
         movie_list = response.xpath('//ul[@class="list"]/li/a')
         if movie_list:
@@ -55,22 +61,18 @@ class Hao6vResourceSpider(BaseSpider):
                                          'year': year},
                                      callback=self.parse_movie)
             self.logger.info(
-                'get hao6v\'s movie list success,type:{},page:{}'.format(config.HAO6V_TYPE_LIST[type_id], page_id))
+                'get hao6v\'s movie list success,type:{},page:{}'.format(type, page_id))
+            # 仅最新电影
+            if self.type == self.type_new and page_id > self.new_max_pages:
+                return
+            # 下一页
+            yield scrapy.Request(url='{}/s/{}/index_{}.html'.format(config.URL_HAO6V, type, page_id + 1),
+                                 meta={'type': type, 'page_id': page_id + 1},
+                                 callback=self.parse_movie_list)
         else:
             self.logger.warning(
-                'get hao6v\'s movie list failed,type:{},page:{}'.format(config.HAO6V_TYPE_LIST[type_id], page_id))
-        # 下一页
-        next_page = response.xpath('//div[@class="listpage"][1]/a[text()="下一页"]/@href').get()
-        if next_page is None:
-            next_page = '/s/{}/'.format(config.HAO6V_TYPE_LIST[type_id + 1])
-            next_type_id = type_id + 1
-            next_page_id = 1
-        else:
-            next_type_id = type_id
-            next_page_id = page_id + 1
-        yield scrapy.Request(url='{}{}'.format(config.URL_HAO6V, next_page),
-                             meta={'type_id': next_type_id, 'page_id': next_page_id},
-                             callback=self.parse_movie_list)
+                'get hao6v\'s movie list failed,type:{},page:{}'.format(type, page_id))
+
 
     def parse_movie(self, response):
         movie_id = response.meta['movie_id']

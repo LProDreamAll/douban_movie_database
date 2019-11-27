@@ -15,6 +15,11 @@ class Xl720ResourceSpider(BaseSpider):
     """
     迅雷电影天堂资源相关
 
+    用法:
+    scrapy crawl xl720_resource -a type={}
+    - all           该网站所有电影
+    - new           该网站最新电影
+
     """
     name = 'xl720_resource'
     # start_url存放容器改为redis list
@@ -26,8 +31,12 @@ class Xl720ResourceSpider(BaseSpider):
         }
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, type=None, **kwargs):
         super().__init__(**kwargs)
+        self.type = type
+        self.type_new = 'new'
+        # 仅爬取最新电影的页数
+        self.new_max_pages = 100
 
     def start_requests(self):
         yield scrapy.Request(url='{}/filter'.format(config.URL_XL720),
@@ -48,13 +57,16 @@ class Xl720ResourceSpider(BaseSpider):
                                          callback=self.parse_movie)
             self.logger.info(
                 'get xl720\'s movie list success,page:{}'.format(page_id))
+            # 仅最新电影
+            if self.type == self.type_new and page_id > self.new_max_pages:
+                return
+            # 下一页
+            yield scrapy.Request(url='{}/filter/page/{}'.format(config.URL_LOLDYTT, page_id + 1),
+                                 meta={'page_id': page_id + 1},
+                                 callback=self.parse_movie_list)
         else:
             self.logger.warning(
                 'get xl720\'s movie list failed,page:{}'.format(page_id))
-        # 下一页
-        yield scrapy.Request(url='{}/filter/page/{}'.format(config.URL_LOLDYTT, page_id + 1),
-                             meta={'page_id': page_id + 1},
-                             callback=self.parse_movie_list)
 
     def parse_movie(self, response):
         movie_id = response.meta['movie_id']

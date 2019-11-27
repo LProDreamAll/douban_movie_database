@@ -11,14 +11,19 @@ from crawler.spiders.base import BaseSpider
 from crawler.items.resource import ResourceMovie
 
 
-class DygodResourceSpider(BaseSpider):
+class Dy2018ResourceSpider(BaseSpider):
     """
     电影天堂资源相关
 
+    用法:
+    scrapy crawl dy2018_resource -a type={}
+    - all           该网站所有电影
+    - new           该网站最新电影
+
     """
-    name = 'dygod_resource'
+    name = 'dy2018_resource'
     # start_url存放容器改为redis list
-    redis_key = 'dygod_resource:start_urls'
+    redis_key = 'dy2018_resource:start_urls'
     allowed_domains = ['www.dy2018.com']
     custom_settings = {
         'ITEM_PIPELINES': {
@@ -26,41 +31,38 @@ class DygodResourceSpider(BaseSpider):
         }
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, type=None, **kwargs):
         super().__init__(**kwargs)
+        self.type = type
+        self.type_new = 'new'
+        # 仅爬取最新电影的页数 (每种类型)
+        self.new_max_pages = 5
 
     def start_requests(self):
-        yield scrapy.Request(url='{}/{}/'.format(config.URL_DYGOD, 0),
-                             meta={'type_id': 0, 'page_id': 1}, callback=self.parse_movie_list)
+        for type_id in range(0, 20, 1):
+            yield scrapy.Request(url='{}/{}/'.format(config.URL_DY2018, type_id),
+                                 meta={'type_id': 0, 'page_id': 1}, callback=self.parse_movie_list)
 
     def parse_movie_list(self, response):
         type_id = response.meta['type_id']
         page_id = response.meta['page_id']
-        # 爬虫结束
-        if type_id > 20:
-            self.crawler.engine.close_spider(self, 'get dygod resource finished')
         # 电影列表
         movie_list = response.xpath('//a[@class="ulink" and @title]/@href').getall()
         if movie_list:
             for movie in movie_list:
-                yield scrapy.Request(url='{}{}'.format(config.URL_DYGOD, movie),
+                yield scrapy.Request(url='{}{}'.format(config.URL_DY2018, movie),
                                      meta={'movie_id': re.search('\d+', movie).group()},
                                      callback=self.parse_movie)
-            self.logger.info('get dygod\'s movie list success,type:{},page:{}'.format(type_id, page_id))
+            self.logger.info('get dy2018\'s movie list success,type:{},page:{}'.format(type_id, page_id))
+            # 仅最新电影
+            if self.type == self.type_new and page_id > self.new_max_pages:
+                return
+            # 下一页
+            yield scrapy.Request(url='{}/{}/index_{}.html'.format(config.URL_DY2018, type_id, page_id + 1),
+                                 meta={'type_id': type_id, 'page_id': page_id + 1},
+                                 callback=self.parse_movie_list)
         else:
-            self.logger.warning('get dygod\'s movie list failed,type:{},page:{}'.format(type_id, page_id))
-        # 下一页
-        next_page = response.xpath('//div[@class="x"]//a[text()="下一页"]/@href').get()
-        if next_page is None:
-            next_page = '/{}'.format(type_id + 1)
-            next_type_id = type_id + 1
-            next_page_id = 1
-        else:
-            next_type_id = type_id
-            next_page_id = page_id + 1
-        yield scrapy.Request(url='{}{}'.format(config.URL_DYGOD, next_page),
-                             meta={'type_id': next_type_id, 'page_id': next_page_id},
-                             callback=self.parse_movie_list)
+            self.logger.warning('get dy2018\'s movie list failed,type:{},page:{}'.format(type_id, page_id))
 
     def parse_movie(self, response):
         movie_id = response.meta['movie_id']
@@ -74,7 +76,7 @@ class DygodResourceSpider(BaseSpider):
                 item_resource['id_movie_douban'] = 0
                 item_resource['id_movie_imdb'] = 0
                 item_resource['id_website_resource'] = 101
-                item_resource['id_type_resource'] = 101 if config.URL_DYGOD in url else 100
+                item_resource['id_type_resource'] = 101 if config.URL_DY2018 in url else 100
                 item_resource['name_zh'] = name
                 year_maybe = response.xpath('//div[@id="Zoom"]/text()').getall()
                 for index, year in enumerate(year_maybe):
@@ -89,6 +91,6 @@ class DygodResourceSpider(BaseSpider):
                 yield item_resource
                 print('-------------------------')
                 print(item_resource)
-            self.logger.info('get dydod\'s movie success,movie_id:{},movie_name:{}'.format(movie_id, name))
+            self.logger.info('get dy2018\'s movie success,movie_id:{},movie_name:{}'.format(movie_id, name))
         else:
-            self.logger.warning('get dydod\'s movie failed,movie_id:{}'.format(movie_id))
+            self.logger.warning('get dy2018\'s movie failed,movie_id:{}'.format(movie_id))

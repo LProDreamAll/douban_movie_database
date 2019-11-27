@@ -1259,7 +1259,12 @@ values (2, '爱奇艺视频', 'https://www.iqiyi.com'),
        (103, 'BT电影天堂', 'http://www.btbtdy.me'),
        (104, 'xl720',    'https://www.xl720.com'),
        (105, '6v电影网', 'http://www.hao6v.com'),
-       (106, '', '');
+       (106, '狗带TV', 'http://www.goodaitv.com'),
+       (107, '在线之家', 'http://www.zxzjs.com'),
+       (108, '比热大雄', 'https://www.btdx8.com'),
+       (109, '', ''),
+       (110, '', ''),
+       (111, '', '');
 
 insert into type_resource
 values (1, '免费观看'),

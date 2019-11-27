@@ -26,13 +26,25 @@ spiders = {
 
     31: 'scene',
 
-    41: 'dygod_resource',
-    42: 'loldytt_resource',
-    43: 'btbtdy_resource',
-    44: 'xl720_resource',
-    45: 'hao6v_resource',
+    41: 'dy2018_resource -a type=all',
+    42: 'dy2018_resource -a type=new',
+    43: 'loldytt_resource -a type=all',
+    44: 'loldytt_resource -a type=new',
+    45: 'btbtdy_resource -a type=all',
+    46: 'btbtdy_resource -a type=new',
+    47: 'xl720_resource -a type=all',
+    48: 'xl720_resource -a type=new',
+    49: 'hao6v_resource -a type=all',
+    50: 'hao6v_resource -a type=new',
+    51: 'goudaitv_resource -a type=all',
+    52: 'goudaitv_resource -a type=new',
+    53: 'zxzjs_resource -a type=all',
+    54: 'zxzjs_resource -a type=new',
+    55: '',
+    56: '',
+    57: '',
 
 }
 cmdline.execute('scrapy crawl {}'.format(spiders.get(
-    45
+    41
 )).split())

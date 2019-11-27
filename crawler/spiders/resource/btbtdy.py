@@ -15,6 +15,11 @@ class BtbtdyResourceSpider(BaseSpider):
     """
     BT电影天堂资源相关
 
+    用法:
+    scrapy crawl btbtdy_resource -a type={}
+    - all           该网站所有电影
+    - new           该网站最新电影
+
     """
     name = 'btbtdy_resource'
     # start_url存放容器改为redis list
@@ -26,8 +31,12 @@ class BtbtdyResourceSpider(BaseSpider):
         }
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, type=None, **kwargs):
         super().__init__(**kwargs)
+        self.type = type
+        self.type_new = 'new'
+        # 仅爬取最新电影的页数
+        self.new_max_pages = 50
 
     def start_requests(self):
         yield scrapy.Request(url='{}/screen/0-----time-1.html'.format(config.URL_BTBTDY),
@@ -50,13 +59,16 @@ class BtbtdyResourceSpider(BaseSpider):
                                          callback=self.parse_movie)
             self.logger.info(
                 'get btbtdy\'s movie list success,page:{}'.format(page_id))
+            # 仅最新电影
+            if self.type == self.type_new and page_id > self.new_max_pages:
+                return
+            # 下一页
+            yield scrapy.Request(url='{}/screen/0-----time-{}.html'.format(config.URL_LOLDYTT, page_id + 1),
+                                 meta={'page_id': page_id + 1},
+                                 callback=self.parse_movie_list)
         else:
             self.logger.warning(
                 'get btbtdy\'s movie list failed,page:{}'.format(page_id))
-        # 下一页
-        yield scrapy.Request(url='{}/screen/0-----time-{}.html'.format(config.URL_LOLDYTT, page_id + 1),
-                             meta={'page_id': page_id + 1},
-                             callback=self.parse_movie_list)
 
     def parse_movie(self, response):
         movie_id = response.meta['movie_id']

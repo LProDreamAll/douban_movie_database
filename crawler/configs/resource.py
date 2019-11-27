@@ -3,10 +3,9 @@
 
 # author: humingk
 # ----------------------
-import re
 
 # 电影天堂
-URL_DYGOD = 'https://www.dy2018.com'
+URL_DY2018 = 'https://www.dy2018.com'
 
 # LOL电影天堂
 URL_LOLDYTT = 'https://www.loldytt.tv'
@@ -19,6 +18,12 @@ URL_XL720 = 'https://www.xl720.com'
 
 # 6v电影网
 URL_HAO6V = 'http://www.hao6v.com'
+
+# 狗带TV
+URL_GOUDAITV = 'http://www.goodaitv.com'
+
+# 在线之家
+URL_ZXZJS = 'http://www.zxzjs.com'
 
 TYPE_LIST = {
     1: '免费观看',
@@ -107,3 +112,11 @@ HAO6V_TYPE_LIST = [
     'lishi',
     'jilu',
 ]
+
+GOUDAITV_TYPE_LIST = [
+    'dianying',
+    'lianxuju',
+    'zongyi',
+    'dongman'
+]
+
