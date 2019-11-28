@@ -4,6 +4,8 @@
 # author: humingk
 # ----------------------
 import re
+import time
+
 import scrapy
 from crawler.configs import douban as config
 from crawler.spiders.base import BaseSpider
@@ -63,7 +65,9 @@ class CommentDoubanSpider(BaseSpider):
                 item_comment['id_user_douban'] = user_id
                 item_comment['agree_vote'] = comment.xpath('.//span[@class="votes"]/text()').get()
                 create_date = comment.xpath('.//span[@title]/text()').get()
-                item_comment['create_date'] = re.search('\d{4}-\d{2}-\d{2}', create_date).group()
+                create = re.search('\d{4}-\d{2}-\d{2}', create_date).group() if create_date is not None else None
+                item_comment['create_date'] = int(
+                    time.mktime(time.strptime(create, '%Y-%m-%d'))) if create is not None else 0
                 item_comment['content'] = comment.xpath('.//span[@class="short"]/text()').get()
                 print('-------------------------')
                 print(item_comment)

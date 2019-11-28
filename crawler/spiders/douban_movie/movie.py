@@ -43,7 +43,7 @@ class MovieDoubanSpider(BaseSpider):
         :param limit:
         :return:
         """
-        self.cursor.execute('select id from movie_douban where is_updated=0 limit {},{}'.format(offset, limit))
+        self.cursor.execute('select id from movie_douban where  limit {},{}'.format(offset, limit))
         for id, in self.cursor.fetchall():
             yield scrapy.Request(url="{}{}/".format(config.URL_MOVIE, id),
                                  cookies=config.get_cookie_douban(),
@@ -82,13 +82,13 @@ class MovieDoubanSpider(BaseSpider):
             item_movie['summary'] = ''.join(response.xpath('//span[@property="v:summary"]/text()').getall())
             see_list = response.xpath('//div[@class="subject-others-interests-ft"]/a/text()').getall()
             item_movie['have_seen'] = 0
-            item_movie['wanna_seen'] = 0
+            item_movie['wanna_see'] = 0
             for see in see_list:
                 if re.match('(\d+)人看过', see) is not None:
                     item_movie['have_seen'] = re.search('(\d+)人看过', see).group(1)
                 if re.match('(\d+)人想看', see) is not None:
-                    item_movie['wanna_seen'] = re.search('(\d+)人想看', see).group(1)
-            item_movie['is_updated'] = 1
+                    item_movie['wanna_see'] = re.search('(\d+)人想看', see).group(1)
+            item_movie['update_date'] = self.today
             print('--------------------------------------')
             print(item_movie)
             yield item_movie

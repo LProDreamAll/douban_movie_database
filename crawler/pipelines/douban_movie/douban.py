@@ -28,7 +28,7 @@ class DoubanPipeline(BasePipeline):
                        'summary=values(summary), '
                        'have_seen=values(have_seen), '
                        'wanna_seen=values(wanna_seen), '
-                       'is_updated=values(is_updated)'
+                       'update_date=values(update_date)'
             },
             'AliasMovieDouban': {
                 'sql': 'insert ignore into alias_movie_douban values (%s,%s)'
@@ -71,7 +71,15 @@ class DoubanPipeline(BasePipeline):
                 'sql': 'insert ignore into user_douban values (%s,%s)'
             },
             'CelebrityDouban': {
-                'sql': 'replace into celebrity_douban values (%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+                'sql': 'insert into celebrity_douban values (%s,%s,%s,%s,%s,%s,%s,%s,%s) '
+                       'on duplicate key update '
+                       'id_celebrity_imdb=values(id_celebrity_imdb), '
+                       'name_origin=values(name_origin), '
+                       'sex=values(sex), '
+                       'birth_date=values(birth_date), '
+                       'url_portrait=values(url_portrait), '
+                       'summary=values(summary), '
+                       'update_date=values(update_date)'
             },
             'AliasCelebrityDouban': {
                 'sql': 'insert ignore into alias_celebrity_douban values (%s,%s,%s)'

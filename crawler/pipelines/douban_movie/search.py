@@ -17,6 +17,13 @@ class SearchDoubanPipeline(BasePipeline):
         super().__init__()
         # 待处理数据列表
         self.item_dict = {
+            'ResourceMovie': {
+                'sql': 'insert into resource_movie(id,id_movie_douban,id_movie_imdb) '
+                       'values (%s,%s,%s) '
+                       'on duplicate key update '
+                       'id_movie_douban=values(id_movie_douban), '
+                       'id_movie_imdb=values(id_movie_imdb) '
+            },
             'MovieDouban': {
                 'sql': 'insert ignore into movie_douban(id,name_zh) values (%s,%s)'
             },

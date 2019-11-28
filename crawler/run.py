@@ -48,5 +48,5 @@ spiders = {
 
 }
 cmdline.execute('scrapy crawl {}'.format(spiders.get(
-    0
+    6
 )).split())

@@ -4,6 +4,8 @@
 # author: humingk
 # ----------------------
 import re
+import time
+
 import scrapy
 from crawler.tools.database_pool import database_pool
 from crawler.configs import douban as config
@@ -68,20 +70,19 @@ class CelebrityDoubanSpider(BaseSpider):
                 item_celebrity['sex'] = 1
             elif re.search('女', sex) is not None:
                 item_celebrity['sex'] = 0
-            item_celebrity['birth_date'] = re.search('\d{4}-\d{2}-\d{2}',
-                                                     birth_date).group() if birth_date is not None else None
+            birth = re.search('\d{4}-\d{2}-\d{2}', birth_date).group() if birth_date is not None else None
+            item_celebrity['birth_date'] = int(
+                time.mktime(time.strptime(birth, '%Y-%m-%d'))) if birth is not None else 0
             item_celebrity['url_portrait'] = re.search('p(\d+)', response.xpath(
                 '//div[@class="pic"]//a[@class="nbg"]/@href').get()).group(1)
             summary_body = response.xpath('//div[@id="intro"]/div[@class="bd"]/span')
             item_celebrity['summary'] = ''
-            print('=============================================================')
-            print(summary_body)
             if not summary_body:
                 item_celebrity['summary'] += response.xpath('//div[@id="intro"]/div[@class="bd"]/text()').get()
             else:
                 summary_list = summary_body.xpath('text()').getall()
                 item_celebrity['summary'] = ''.join(summary_list)
-            item_celebrity['is_updated'] = 1
+            item_celebrity['update_date'] = self.today
             print(item_celebrity)
             yield item_celebrity
             # 奖项

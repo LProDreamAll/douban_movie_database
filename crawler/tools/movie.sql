@@ -94,23 +94,25 @@ create table type_movie
 # IMDB电影 
 create table movie_imdb
 (
-    id            bigint unsigned      not null primary key,
+    id                bigint unsigned      not null primary key,
     # 影片种类/类型  (电影、电视剧、电视剧的单集...)
-    id_type_video tinyint unsigned     not null default 1,
+    id_type_video     tinyint unsigned     not null default 1,
     # IMDB电影英文名
-    name_en       varchar(255)         not null default '',
+    name_en           varchar(255)         not null default '',
     # IMDB电影发行年份 、 电视剧首集播放年份
-    start_year    smallint(4) unsigned not null default 0,
+    start_year        smallint(4) unsigned not null default 0,
     # 是否是成人电影 0-不是 1-是
-    is_adult      tinyint(1)           not null default 0,
+    is_adult          tinyint(1)           not null default 0,
     # IMDB电影原始名
-    name_origin   varchar(255)         not null default '',
+    name_origin       varchar(255)         not null default '',
     # IMDB电影片长 分钟
-    runtime       smallint unsigned    not null default 0,
+    runtime           smallint unsigned    not null default 0,
     # imdb海报 https://m.media-amazon.com/images/M/ + url
-    url_poster    varchar(1000)        not null default '',
+    url_poster        varchar(1000)        not null default '',
     # 简介
-    summary       text,
+    summary           text,
+    # 是否更新豆瓣电影 0:未更新 1:已更新
+    is_douban_updated tinyint(1)           not null default 0,
 
     index (id_type_video),
     index (name_en),
@@ -179,15 +181,21 @@ create table movie_douban
     url_poster    bigint unsigned      not null default 0,
     # 简介
     summary       text,
+    # 已看人数
+    have_seen     int unsigned         not null default 0,
+    # 想看人数
+    wanna_see     int unsigned         not null default 0,
     # 更新时间
-    update_date   date,
+    update_date   int(10)              not null default 0,
 
 
     index (id_type_video),
     index (id_movie_imdb),
     index (start_year),
     index (name_zh),
-    index (name_origin)
+    index (name_origin),
+    index (have_seen desc),
+    index (wanna_see desc)
 ) ENGINE = InnoDB
   default charset = utf8mb4;
 insert into movie_douban(id, name_zh, name_origin)
@@ -196,27 +204,21 @@ values (0, '未知', 'unknown');
 # 豆瓣电影评分
 create table rate_movie_douban
 (
-    id          bigint unsigned not null primary key,
+    id     bigint unsigned not null primary key,
     # 豆瓣电影评分 0.0 ~ 10.0
-    score       decimal(3, 1)   not null default 0.0,
+    score  decimal(3, 1)   not null default 0.0,
     # 豆瓣电影评分人数
-    vote        int unsigned    not null default 0,
+    vote   int unsigned    not null default 0,
     # 豆瓣1星 %
-    score1      decimal(3, 1)   not null default 0.0,
+    score1 decimal(3, 1)   not null default 0.0,
     # 豆瓣2星 %
-    score2      decimal(3, 1)   not null default 0.0,
+    score2 decimal(3, 1)   not null default 0.0,
     # 豆瓣3星 %
-    score3      decimal(3, 1)   not null default 0.0,
+    score3 decimal(3, 1)   not null default 0.0,
     # 豆瓣4星 %
-    score4      decimal(3, 1)   not null default 0.0,
+    score4 decimal(3, 1)   not null default 0.0,
     # 豆瓣5星 %
-    score5      decimal(3, 1)   not null default 0.0,
-    # 已看人数
-    have_seen   int unsigned    not null default 0,
-    # 想看人数
-    wanna_see   int unsigned    not null default 0,
-    # 更新时间
-    update_date date,
+    score5 decimal(3, 1)   not null default 0.0,
 
 
     index (score desc),
@@ -279,12 +281,13 @@ create table comment_movie_douban
     # 投票数
     agree_vote      smallint        not null default 0,
     # 短评日期
-    create_date     date,
+    create_date     int(10)         not null default 0,
     # 短评内容
     content         varchar(1000)   not null default '',
 
     primary key (id_movie_douban, id_user_douban),
     index (agree_vote desc),
+    index (create_date desc),
     index (content(20))
 ) ENGINE = InnoDB
   default charset = utf8mb4;
@@ -298,12 +301,13 @@ create table review_movie_douban
     # 反对数
     against_vote    int unsigned    not null default 0,
     # 影评日期时间
-    create_datetime datetime,
+    create_datetime bigint(13)      not null default 0,
     # 影评内容
     content         text,
 
     index (agree_vote desc),
     index (against_vote desc),
+    index (create_datetime desc),
     index (content(20))
 ) ENGINE = InnoDB
   default charset = utf8mb4;
@@ -392,13 +396,15 @@ create table profession
 create table celebrity_imdb
 (
     # nm+id,id至少7个数字（不够7个在id前面添0）
-    id         bigint unsigned      not null primary key,
+    id                bigint unsigned      not null primary key,
     # 英文名
-    name_en    varchar(255)         not null default '',
+    name_en           varchar(255)         not null default '',
     # 出生年份
-    birth_year smallint(4) unsigned not null default 0,
+    birth_year        smallint(4) unsigned not null default 0,
     # 死亡年份
-    death_year smallint(4) unsigned not null default 0,
+    death_year        smallint(4) unsigned not null default 0,
+    # 是否更新豆瓣影人 0:未更新 1:已更新
+    is_douban_updated tinyint(1)           not null default 0,
 
     index (name_en)
 ) ENGINE = InnoDB
@@ -439,13 +445,13 @@ create table celebrity_douban
     # 性别 0-女 1-男 2-其他
     sex               tinyint(1)      not null default 2,
     # 生日日期
-    birth_date        date,
+    birth_date        int(10)         not null default 0,
     # 豆瓣影人海报ID
     url_portrait      bigint unsigned not null default 0,
     # 影人简介
     summary           text,
-    # 是否更新 0-否 1-已更新
-    is_updated        tinyint(1)      not null default 0,
+    # 更新时间
+    update_date       int(10)         not null default 0,
 
     index (id_celebrity_imdb),
     index (name_zh),
@@ -507,19 +513,21 @@ create table celebrity_douban_to_classic
 # 场景电影
 create table movie_scene
 (
-    id              bigint unsigned      not null primary key,
+    id                bigint unsigned      not null primary key,
     # 场景电影对应的豆瓣电影ID
-    id_movie_douban bigint unsigned      not null default 0,
+    id_movie_douban   bigint unsigned      not null default 0,
     # 场景电影中文名
-    name_zh         varchar(255)         not null default '',
+    name_zh           varchar(255)         not null default '',
     # 场景电影英文名
-    name_en         varchar(255)         not null default '',
+    name_en           varchar(255)         not null default '',
     # 上映时间
-    start_year      smallint(4) unsigned not null default 0,
+    start_year        smallint(4) unsigned not null default 0,
     # 场景电影拍摄地点大致描述
-    description     varchar(1000)        not null default '',
+    description       varchar(1000)        not null default '',
     # 场景电影地点分布图链接
-    url_map         varchar(1000)        not null default '',
+    url_map           varchar(1000)        not null default '',
+    # 是否更新豆瓣 0:未更新 1:已更新
+    is_douban_updated tinyint(1)           not null default 0,
 
     index (id_movie_douban),
     index (name_zh),
@@ -539,6 +547,8 @@ create table celebrity_scene
     name_zh             varchar(255)    not null default '',
     # 场景名人英文名
     name_en             varchar(255)    not null default '',
+    # 是否更新豆瓣 0:未更新 1:已更新
+    is_douban_updated   tinyint(1)      not null default 0,
 
     index (id_celebrity_douban),
     index (name_zh),
@@ -792,6 +802,8 @@ create table resource_movie
     name_origin         varchar(255)      not null default '',
     # 资源链接 id_website < 100 则url前缀拼接 https://www.douban.com/link2/?url=
     url_resource        varchar(1000)     not null default '',
+    # 是否更新豆瓣 0:未更新 1:已更新
+    is_douban_updated   tinyint(1)        not null default 0,
 
 
     index (id_movie_douban),

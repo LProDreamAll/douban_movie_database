@@ -3,6 +3,8 @@
 
 # author: humingk
 # ----------------------
+import time
+
 from crawler.tools.database_pool import database_pool
 from crawler.configs import default
 from scrapy_redis.spiders import RedisSpider
@@ -24,6 +26,8 @@ class BaseSpider(RedisSpider):
         self.count = 0
         # 当前请求列表数量限制
         self.limit = default.REQUEST_NOW
+        # 当期日期
+        self.today = int(time.time())
 
     def start_requests(self):
         return self.prepare(self.count, self.limit)

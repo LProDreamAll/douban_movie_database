@@ -25,7 +25,7 @@ class MovieDouban(scrapy.Item):
     summary = scrapy.Field()
     have_seen = scrapy.Field()
     wanna_seen = scrapy.Field()
-    is_updated = scrapy.Field()
+    update_time = scrapy.Field()
 
 
 class AliasMovieDouban(scrapy.Item):
@@ -100,7 +100,7 @@ class CelebrityDouban(scrapy.Item):
     birth_date = scrapy.Field()
     url_portrait = scrapy.Field()
     summary = scrapy.Field()
-    is_updated = scrapy.Field()
+    update_date= scrapy.Field()
 
 
 class AliasCelebrityDouban(scrapy.Item):
@@ -115,7 +115,6 @@ class ImageCelebrityDouban(scrapy.Item):
     sort = scrapy.Field()
     length = scrapy.Field()
     width = scrapy.Field()
-
 
 
 # 评论相关
