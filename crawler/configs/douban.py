@@ -33,7 +33,7 @@ URL_SEARCH_TIPS_MOVIE = 'https://movie.douban.com/j/subject_suggest?q='
 URL_SEARCH_MOVIE = 'https://search.douban.com/movie/subject_search?search_text='
 
 # 搜索内容电影上映时间精确度
-ACCURACY_RELEASE_TIME = 3
+ACCURACY_RELEASE_TIME = 1
 
 # 电影短评链接 start + ID +end
 URL_COMMENT_MOVIE_START = 'https://movie.douban.com/subject/'

@@ -17,7 +17,18 @@ class DoubanPipeline(BasePipeline):
         # 待处理数据列表
         self.item_dict = {
             'MovieDouban': {
-                'sql': 'replace into movie_douban values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+                'sql': 'insert into movie_douban values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) '
+                       'on duplicate key update '
+                       'id_type_video=values(id_type_video), '
+                       'id_movie_imdb=values(id_movie_imdb), '
+                       'start_year=values(start_year), '
+                       'name_origin=values(name_origin), '
+                       'runtime=values(runtime), '
+                       'url_poster=values(url_poster), '
+                       'summary=values(summary), '
+                       'have_seen=values(have_seen), '
+                       'wanna_seen=values(wanna_seen), '
+                       'is_updated=values(is_updated)'
             },
             'AliasMovieDouban': {
                 'sql': 'insert ignore into alias_movie_douban values (%s,%s)'
@@ -47,7 +58,7 @@ class DoubanPipeline(BasePipeline):
                 'sql': 'insert ignore into trailer_movie_douban values (%s,%s,%s)'
             },
             'ResourceMovie': {
-                'sql': 'insert into resource_movie(id_movie_douban,id_movie_imdb ,id_website_resource, id_type_resource, name_zh,create_year,name_origin,url_resource) '
+                'sql': 'insert ignore into resource_movie(id_movie_douban,id_movie_imdb ,id_website_resource, id_type_resource, name_zh,create_year,name_origin,url_resource) '
                        ' values (%s,%s,%s,%s,%s,%s,%s,%s)'
             },
             'ImageCelebrityDouban': {

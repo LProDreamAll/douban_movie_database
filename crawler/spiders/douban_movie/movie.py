@@ -200,7 +200,7 @@ class MovieDoubanSpider(BaseSpider):
                 for resource in resource_list:
                     item_resource = ResourceMovie()
                     item_resource['id_movie_douban'] = movie_id
-                    item_resource['id_movie_douban'] = imdb_id
+                    item_resource['id_movie_imdb'] = imdb_id
                     item_resource['id_website_resource'] = 1
                     website = resource.xpath('a/text()').get().strip()
                     if website in config.WEBSITE_RESOURCE_LIST:

@@ -19,6 +19,8 @@ spiders = {
     9: 'search_douban -a tpye=celebrity_scene',
     10: 'search_douban -a tpye=movie_resource',
 
+    11: 'movie_imdb',
+
     20: 'search_netease',
     21: 'playlist_netease',
     22: 'comment_netease',
@@ -46,5 +48,5 @@ spiders = {
 
 }
 cmdline.execute('scrapy crawl {}'.format(spiders.get(
-    41
+    0
 )).split())

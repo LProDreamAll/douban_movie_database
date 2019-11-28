@@ -101,21 +101,20 @@ create table movie_imdb
     name_en       varchar(255)         not null default '',
     # IMDB电影发行年份 、 电视剧首集播放年份
     start_year    smallint(4) unsigned not null default 0,
-    # IMDB电影发行年份 、 最后一集播放年份
-    end_year      smallint(4) unsigned not null default 0,
     # 是否是成人电影 0-不是 1-是
     is_adult      tinyint(1)           not null default 0,
     # IMDB电影原始名
     name_origin   varchar(255)         not null default '',
     # IMDB电影片长 分钟
     runtime       smallint unsigned    not null default 0,
-    # imdb海报
+    # imdb海报 https://m.media-amazon.com/images/M/ + url
     url_poster    varchar(1000)        not null default '',
+    # 简介
+    summary       text,
 
     index (id_type_video),
     index (name_en),
     index (start_year desc),
-    index (end_year desc),
     index (name_origin)
 ) ENGINE = InnoDB
   default charset = utf8mb4;
@@ -131,15 +130,15 @@ create table rate_imdb
     imdb_score   decimal(3, 1)   not null default 0.0,
     # IMDB评分人数
     imdb_vote    int unsigned    not null default 0,
-    # MTC评分
-    mtc_score    decimal(3, 1)   not null default 0.0,
     # 烂番茄新鲜度
     tomato_score decimal(3, 1)   not null default 0.0,
+    # MTC评分
+    mtc_score    decimal(3, 1)   not null default 0.0,
 
-    index (mtc_score desc),
-    index (tomato_score desc),
     index (imdb_score desc),
-    index (imdb_vote desc)
+    index (imdb_vote desc),
+    index (tomato_score desc),
+    index (mtc_score desc)
 ) ENGINE = InnoDB
   default charset = utf8mb4;
 
@@ -180,12 +179,8 @@ create table movie_douban
     url_poster    bigint unsigned      not null default 0,
     # 简介
     summary       text,
-    # 已看人数
-    have_seen     int unsigned         not null default 0,
-    # 想看人数
-    wanna_seen    int unsigned         not null default 0,
-    # 是否更新 0-否 1-已经更新
-    is_updated    tinyint unsigned     not null default 0,
+    # 更新时间
+    update_date   date,
 
 
     index (id_type_video),
@@ -201,21 +196,28 @@ values (0, '未知', 'unknown');
 # 豆瓣电影评分
 create table rate_movie_douban
 (
-    id     bigint unsigned not null primary key,
+    id          bigint unsigned not null primary key,
     # 豆瓣电影评分 0.0 ~ 10.0
-    score  decimal(3, 1)   not null default 0.0,
+    score       decimal(3, 1)   not null default 0.0,
     # 豆瓣电影评分人数
-    vote   int unsigned    not null default 0,
+    vote        int unsigned    not null default 0,
     # 豆瓣1星 %
-    score1 decimal(3, 1)   not null default 0.0,
+    score1      decimal(3, 1)   not null default 0.0,
     # 豆瓣2星 %
-    score2 decimal(3, 1)   not null default 0.0,
+    score2      decimal(3, 1)   not null default 0.0,
     # 豆瓣3星 %
-    score3 decimal(3, 1)   not null default 0.0,
+    score3      decimal(3, 1)   not null default 0.0,
     # 豆瓣4星 %
-    score4 decimal(3, 1)   not null default 0.0,
+    score4      decimal(3, 1)   not null default 0.0,
     # 豆瓣5星 %
-    score5 decimal(3, 1)   not null default 0.0,
+    score5      decimal(3, 1)   not null default 0.0,
+    # 已看人数
+    have_seen   int unsigned    not null default 0,
+    # 想看人数
+    wanna_see   int unsigned    not null default 0,
+    # 更新时间
+    update_date date,
+
 
     index (score desc),
     index (vote desc)
@@ -785,7 +787,7 @@ create table resource_movie
     # 资源中文名(电影名)
     name_zh             varchar(255)      not null default '',
     # 电影年代
-    create_year         year,
+    create_year         smallint(4)       not null default 0,
     # 资源原始名
     name_origin         varchar(255)      not null default '',
     # 资源链接 id_website < 100 则url前缀拼接 https://www.douban.com/link2/?url=
@@ -1257,7 +1259,7 @@ values (2, '爱奇艺视频', 'https://www.iqiyi.com'),
        (101, '电影天堂', 'https://www.dy2018.com'),
        (102, 'LOL电影天堂', 'https://www.loldytt.tv'),
        (103, 'BT电影天堂', 'http://www.btbtdy.me'),
-       (104, 'xl720',    'https://www.xl720.com'),
+       (104, 'xl720', 'https://www.xl720.com'),
        (105, '6v电影网', 'http://www.hao6v.com'),
        (106, '狗带TV', 'http://www.goodaitv.com'),
        (107, '在线之家', 'http://www.zxzjs.com'),
@@ -1554,10 +1556,10 @@ from name_basics;
  insert into type_video(name_en)
 select titleType from title_basics where titleType!='episode' group by titleType;
 
-insert into movie_imdb(id,id_type_video,start_year,end_year,is_adult,name_en,name_origin,runtime)
+insert into movie_imdb(id,id_type_video,start_year,is_adult,name_en,name_origin,runtime)
 select tconst,
 (select id from type_video where name_en=titleType),
-ifnull(startYear,0),ifnull(endYear,0),isAdult,
+ifnull(startYear,0),isAdult,
 if(isnull(primaryTitle)=0 and char_length(primaryTitle)<255,primaryTitle,''),
 if(isnull(originalTitle)=0 and char_length(originalTitle)<255,originalTitle,''),
 if(isnull(runtimeMinutes)=0 and runtimeMinutes<60000,runtimeMinutes,0)
