@@ -11,13 +11,13 @@ spiders = {
     1: 'celebrity_douban',
     2: 'comment_douban',
     3: 'trailer_douban',
-    4: 'image_douban -a tpye=movie',
-    5: 'image_douban -a tpye=celebrity',
-    6: 'search_douban -a tpye=movie_imdb',
-    7: 'search_douban -a tpye=celebrity_imdb',
-    8: 'search_douban -a tpye=movie_scene',
-    9: 'search_douban -a tpye=celebrity_scene',
-    10: 'search_douban -a tpye=movie_resource',
+    4: 'image_douban -a type=movie',
+    5: 'image_douban -a type=celebrity',
+    6: 'search_douban -a type=movie_imdb',
+    7: 'search_douban -a type=celebrity_imdb',
+    8: 'search_douban -a type=movie_scene',
+    9: 'search_douban -a type=celebrity_scene',
+    10: 'search_douban -a type=movie_resource',
 
     11: 'movie_imdb',
 
@@ -39,7 +39,7 @@ spiders = {
     49: 'hao6v_resource -a type=all',
     50: 'hao6v_resource -a type=new',
     51: 'goudaitv_resource -a type=all',
-    52: 'goudaitv_resource -a type=new',
+    52: 'goudaitv_resource -a  type=new',
     53: 'zxzjs_resource -a type=all',
     54: 'zxzjs_resource -a type=new',
     55: '',
@@ -48,5 +48,5 @@ spiders = {
 
 }
 cmdline.execute('scrapy crawl {}'.format(spiders.get(
-    6
+    1
 )).split())

@@ -24,8 +24,8 @@ class MovieDouban(scrapy.Item):
     url_poster = scrapy.Field()
     summary = scrapy.Field()
     have_seen = scrapy.Field()
-    wanna_seen = scrapy.Field()
-    update_time = scrapy.Field()
+    wanna_see = scrapy.Field()
+    update_date = scrapy.Field()
 
 
 class AliasMovieDouban(scrapy.Item):

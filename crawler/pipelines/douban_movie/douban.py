@@ -27,7 +27,7 @@ class DoubanPipeline(BasePipeline):
                        'url_poster=values(url_poster), '
                        'summary=values(summary), '
                        'have_seen=values(have_seen), '
-                       'wanna_seen=values(wanna_seen), '
+                       'wanna_see=values(wanna_see), '
                        'update_date=values(update_date)'
             },
             'AliasMovieDouban': {

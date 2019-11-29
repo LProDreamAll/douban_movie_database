@@ -7,6 +7,7 @@ import json
 import scrapy
 from datetime import datetime
 from crawler.tools.netease_encrypt import form_data
+from crawler.configs import default
 from crawler.configs import netease as config
 from crawler.spiders.base import BaseSpider
 
@@ -33,20 +34,13 @@ class CommentNeteaseSpider(BaseSpider):
         super().__init__(**kwargs)
         self.form_data = form_data()
 
-    def prepare(self, offset, limit):
-        """
-        获取请求列表
-
-        :param offset:
-        :param limit:
-        :return:
-        """
+    def start_requests(self):
         self.cursor.execute("select song_netease.id from song_netease "
                             "left join comment_netease "
                             "on song_netease.id=comment_netease.id_song_netease "
                             "where song_netease.id_movie_douban!=0 "
                             "and comment_netease.id_song_netease is null "
-                            'limit {},{}'.format(offset, limit))
+                            'limit {}'.format(default.SELECT_LIMIT))
         for id, in self.cursor.fetchall():
             first_param_dict = config.EAPI_PARAMS
             first_param_dict['rid'] = ''
@@ -57,7 +51,6 @@ class CommentNeteaseSpider(BaseSpider):
                                               eapi_url='{}{}'.format(config.URL_COMMENT_HOT_EAPI, id))
             yield scrapy.FormRequest(url='{}{}'.format(config.URL_COMMENT_HOT, id),
                                      formdata=fd, meta={'id': id}, callback=self.parse)
-        self.logger.info('get netease comment\'s request list success,offset:{},limit:{}'.format(offset, limit))
 
     def parse(self, response):
         song_id = response.meta['id']
@@ -85,8 +78,3 @@ class CommentNeteaseSpider(BaseSpider):
             self.logger.info('get netease hot comment success,movie_id:{}'.format(song_id))
         else:
             self.logger.warning('get netease hot comment failed,movie_id:{}'.format(song_id))
-        # 获取新的请求列表
-        self.count += 1
-        if self.count % self.limit == 0:
-            for request in self.prepare(self.count, self.limit):
-                yield request

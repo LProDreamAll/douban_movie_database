@@ -5,8 +5,8 @@
 # ----------------------
 import json
 import re
-
 import scrapy
+from crawler.configs import default
 from crawler.configs import imdb as config
 from crawler.spiders.base import BaseSpider
 
@@ -29,26 +29,17 @@ class ImdbSpider(BaseSpider):
         }
     }
 
-    def __init__(self, type=None, **kwargs):
+    def __init__(self,  **kwargs):
         super().__init__(**kwargs)
-        self.type = type
         self.type_new = 'new'
 
-    def prepare(self, offset, limit):
-        """
-        获取请求列表
-
-        :param offset:
-        :param limit:
-        :return:
-        """
+    def start_requests(self):
         self.cursor.execute(
-            'select id_movie_imdb from movie_douban where id_movie_imdb!=0 and is_updated=1 limit {},{}'
-                .format(offset, limit))
+            'select id_movie_imdb from movie_douban where id_movie_imdb!=0 and is_updated=1 limit {}'
+                .format(default.SELECT_LIMIT))
         for id, in self.cursor.fetchall():
             yield scrapy.Request(url='{}tt{}'.format(config.URL_OMDB_SEARCH, '%07d' % id),
                                  meta={'imdb_id': id}, callback=self.parse)
-        self.logger.info('get omdb\'s request list success,offset:{},limit:{}'.format(offset, limit))
 
     def parse(self, response):
         imdb_id = response.meta['imdb_id']
@@ -78,8 +69,4 @@ class ImdbSpider(BaseSpider):
             self.logger.info('get omdb\'s movie success,imdb_id:{}'.format(imdb_id))
         else:
             self.logger.warning('get omdb\'s movie failed,imdb_id:{}'.format(imdb_id))
-        # 获取新的请求列表
-        self.count += 1
-        if self.count % self.limit == 0:
-            for request in self.prepare(self.count, self.limit):
-                yield request
+

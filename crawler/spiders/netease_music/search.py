@@ -6,6 +6,7 @@
 import json
 import scrapy
 from crawler.tools.netease_encrypt import form_data
+from crawler.configs import default
 from crawler.configs import netease as config
 from crawler.spiders.base import BaseSpider
 
@@ -36,14 +37,7 @@ class SearchNeteaseSpider(BaseSpider):
         super().__init__(**kwargs)
         self.form_data = form_data()
 
-    def prepare(self, offset, limit):
-        """
-        获取请求列表
-
-        :param offset:
-        :param limit:
-        :return:
-        """
+    def start_requests(self):
         self.cursor.execute("select movie_douban.id,movie_douban.name_zh from movie_douban "
                             "left join song_netease "
                             "on movie_douban.id=song_netease.id_movie_douban "
@@ -54,7 +48,7 @@ class SearchNeteaseSpider(BaseSpider):
                             "where song_netease.id_movie_douban is null "
                             "and playlist_netease.id_movie_douban is null "
                             "and album_netease.id_movie_douban is null "
-                            'limit {},{}'.format(offset, limit))
+                            'limit {}'.format(default.SELECT_LIMIT))
         for id, keyword in self.cursor.fetchall():
             first_param = """{{s:"{}",type:"web"}}""".format(keyword)
             # 安卓API type=1:歌曲 10:专辑 1000:歌单
@@ -65,7 +59,6 @@ class SearchNeteaseSpider(BaseSpider):
             fd = self.form_data.get_form_data(first_param=first_param, api_type=config.TYPE_WEAPI, eapi_url=None)
             yield scrapy.FormRequest(url=config.URL_SEARCH_TIPS, formdata=fd,
                                      meta={'id': id, 'keyword': keyword}, callback=self.parse)
-        self.logger.info('get netease search\'s request list success,offset:{},limit:{}'.format(offset, limit))
 
     def parse(self, response):
         movie_id = response.meta['id']
@@ -129,8 +122,4 @@ class SearchNeteaseSpider(BaseSpider):
             self.logger.info('get netease search success,movie_id:{},keyword:{}'.format(movie_id, keyword))
         else:
             self.logger.warning('get netease search failed,movie_id:{},keyword:{}'.format(movie_id, keyword))
-        # 获取新的请求列表
-        self.count += 1
-        if self.count % self.limit == 0:
-            for request in self.prepare(self.count, self.limit):
-                yield request
+

@@ -6,6 +6,7 @@
 import json
 import re
 import scrapy
+from crawler.configs import default
 from crawler.configs import douban as config
 from crawler.spiders.base import BaseSpider
 
@@ -27,20 +28,13 @@ class TrailerDoubanSpider(BaseSpider):
         }
     }
 
-    def prepare(self, offset, limit):
-        """
-        获取请求列表
-
-        :param offset:
-        :param limit:
-        :return:
-        """
-        self.cursor.execute("select id from trailer_movie_douban where url_video='' limit {},{}".format(offset, limit))
+    def start_requests(self):
+        self.cursor.execute(
+            "select id from trailer_movie_douban where url_video='' limit {}".format(default.SELECT_LIMIT))
         for id, in self.cursor.fetchall():
             yield scrapy.Request(url="{}{}/".format(config.URL_TRAILER_MOVIE, id),
                                  cookies=config.get_cookie_douban(),
                                  meta={'id': id}, callback=self.parse)
-        self.logger.info('get douban trailer\'s request list success,offset:{},limit:{}'.format(offset, limit))
 
     def parse(self, response):
         trailer_id = response.meta['id']
@@ -56,8 +50,3 @@ class TrailerDoubanSpider(BaseSpider):
             self.logger.info('get douban trailer success,trailer_id:{}'.format(trailer_id))
         else:
             self.logger.warning('get douban trailer failed,trailer_id:{}'.format(trailer_id))
-        # 获取新的请求列表
-        self.count += 1
-        if self.count % self.limit == 0:
-            for request in self.prepare(self.count, self.limit):
-                yield request

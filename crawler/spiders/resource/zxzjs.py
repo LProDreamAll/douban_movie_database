@@ -31,9 +31,8 @@ class ZxzjsResourceSpider(BaseSpider):
         }
     }
 
-    def __init__(self, type=None, **kwargs):
+    def __init__(self,  **kwargs):
         super().__init__(**kwargs)
-        self.type = type
         self.type_new = 'new'
         self.start_year = datetime.datetime.now().year
         self.end_year = 1989

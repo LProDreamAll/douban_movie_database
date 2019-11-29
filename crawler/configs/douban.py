@@ -8,11 +8,11 @@
 豆瓣配置
 
 """
-
-# 豆瓣电影 + ID + /
 import random
 import string
 
+
+# 豆瓣电影 + ID + /
 URL_MOVIE = 'https://movie.douban.com/subject/'
 
 # 豆瓣影人 +  ID + /
@@ -41,6 +41,12 @@ URL_COMMENT_MOVIE_END = '/comments?start=0&limit=20&sort=new_score&status=P'
 
 # 电影预告片链接 + ID + /
 URL_TRAILER_MOVIE = 'https://movie.douban.com/trailer/'
+
+# 豆瓣搜索解密JS路径
+# console模式
+# PATH_DOUBAN_SEARCH_DECRYPT = './crawler/tools/douban_search_decrypt.js'
+# PyCharm Debug模式
+PATH_DOUBAN_SEARCH_DECRYPT = './tools/douban_search_decrypt.js'
 
 
 def get_cookie_douban():

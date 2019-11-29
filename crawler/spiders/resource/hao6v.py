@@ -31,9 +31,8 @@ class Hao6vResourceSpider(BaseSpider):
         }
     }
 
-    def __init__(self, type=None, **kwargs):
+    def __init__(self,  **kwargs):
         super().__init__(**kwargs)
-        self.type = type
         self.type_new = 'new'
         # 仅爬取最新电影的页数 (每种类型)
         self.new_max_pages = 10

@@ -513,21 +513,19 @@ create table celebrity_douban_to_classic
 # 场景电影
 create table movie_scene
 (
-    id                bigint unsigned      not null primary key,
-    # 场景电影对应的豆瓣电影ID
-    id_movie_douban   bigint unsigned      not null default 0,
+    id              bigint unsigned      not null primary key,
+    # 场景电影对应的豆瓣电影ID 0:未匹配 1:已匹配
+    id_movie_douban bigint unsigned      not null default 0,
     # 场景电影中文名
-    name_zh           varchar(255)         not null default '',
+    name_zh         varchar(255)         not null default '',
     # 场景电影英文名
-    name_en           varchar(255)         not null default '',
+    name_en         varchar(255)         not null default '',
     # 上映时间
-    start_year        smallint(4) unsigned not null default 0,
+    start_year      smallint(4) unsigned not null default 0,
     # 场景电影拍摄地点大致描述
-    description       varchar(1000)        not null default '',
+    description     varchar(1000)        not null default '',
     # 场景电影地点分布图链接
-    url_map           varchar(1000)        not null default '',
-    # 是否更新豆瓣 0:未更新 1:已更新
-    is_douban_updated tinyint(1)           not null default 0,
+    url_map         varchar(1000)        not null default '',
 
     index (id_movie_douban),
     index (name_zh),
@@ -541,14 +539,12 @@ values (0, 0, '未知', 'unknown');
 create table celebrity_scene
 (
     id                  bigint unsigned not null primary key,
-    # 场景电影对应的豆瓣名人ID
+    # 场景电影对应的豆瓣名人ID 0:未匹配 1:已匹配
     id_celebrity_douban bigint unsigned not null default 0,
     # 场景名人中文名
     name_zh             varchar(255)    not null default '',
     # 场景名人英文名
     name_en             varchar(255)    not null default '',
-    # 是否更新豆瓣 0:未更新 1:已更新
-    is_douban_updated   tinyint(1)      not null default 0,
 
     index (id_celebrity_douban),
     index (name_zh),
@@ -786,7 +782,7 @@ create table type_resource
 create table resource_movie
 (
     id                  bigint unsigned   not null auto_increment primary key,
-    # 资源对应的电影
+    # 资源对应的电影 0:未匹配 1:已匹配
     id_movie_douban     bigint unsigned   not null default 0,
     # 资源对应IMDB的ID
     id_movie_imdb       bigint unsigned   not null default 0,
@@ -802,8 +798,6 @@ create table resource_movie
     name_origin         varchar(255)      not null default '',
     # 资源链接 id_website < 100 则url前缀拼接 https://www.douban.com/link2/?url=
     url_resource        varchar(1000)     not null default '',
-    # 是否更新豆瓣 0:未更新 1:已更新
-    is_douban_updated   tinyint(1)        not null default 0,
 
 
     index (id_movie_douban),
@@ -1358,7 +1352,9 @@ values (1, '未知'),
 # 测试数据
 insert into movie_imdb(id, start_year)
 values (23071, 1932),
-       (127917, 1998),
+       (3371366, 2017),
+       (109830, 1994),
+       (1628841, 2016),
        (2193456, 2013),
        (1239228, 2008),
        (120731, 1998),
@@ -1368,12 +1364,19 @@ values (23071, 1932),
        (8739752, 2019);
 insert into celebrity_imdb(id)
 values (4082296),
-       (0451148);
+       (350454),
+       (634240),
+       (634300),
+       (323),
+       (5132),
+       (1173);
 insert into movie_douban(id, name_zh)
 values (27119724, '小丑'),
        (30242710, '他们已不再变老'),
        (26786669, '决战中途岛'),
-       (26794435, '哪吒之魔童降世');
+       (26794435, '哪吒之魔童降世'),
+       (1292720, '阿甘正传'),
+       (30362186, '大约在冬季');
 insert into celebrity_douban(id)
 values (1018983),
        (1005822),

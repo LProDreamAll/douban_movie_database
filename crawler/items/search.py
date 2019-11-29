@@ -5,22 +5,27 @@
 # ----------------------
 import scrapy
 
+"""
+search
+均用于更新,或添加ID
 
-# 用于更新resource
+"""
+
+
 class ResourceMovie(scrapy.Item):
     id = scrapy.Field()
     id_movie_douban = scrapy.Field()
-    id_movie_imdb = scrapy.Field()
 
 
 class MovieDouban(scrapy.Item):
     id = scrapy.Field()
     name_zh = scrapy.Field()
+    start_year = scrapy.Field()
 
 
 class CelebrityDouban(scrapy.Item):
     id = scrapy.Field()
-    name_zh = scrapy.Field()
+    name_en = scrapy.Field()
 
 
 class MovieScene(scrapy.Item):
@@ -31,3 +36,13 @@ class MovieScene(scrapy.Item):
 class CelebrityScene(scrapy.Item):
     id = scrapy.Field()
     id_celebrity_douban = scrapy.Field()
+
+
+class MovieImdb(scrapy.Item):
+    id = scrapy.Field()
+    is_douban_updated = scrapy.Field()
+
+
+class CelebrityImdb(scrapy.Item):
+    id = scrapy.Field()
+    is_douban_updated = scrapy.Field()

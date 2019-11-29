@@ -6,6 +6,7 @@
 import json
 import scrapy
 from crawler.tools.netease_encrypt import form_data
+from crawler.configs import default
 from crawler.configs import netease as config
 from crawler.spiders.base import BaseSpider
 
@@ -34,25 +35,17 @@ class AlbumNeteaseSpider(BaseSpider):
         super().__init__(**kwargs)
         self.form_data = form_data()
 
-    def prepare(self, offset, limit):
-        """
-        获取请求列表
-
-        :param offset:
-        :param limit:
-        :return:
-        """
+    def start_requests(self):
         self.cursor.execute("select album_netease.id from album_netease "
                             "left join song_netease_to_album_netease "
                             "on album_netease.id=song_netease_to_album_netease.id_album_netease "
                             "where song_netease_to_album_netease.id_album_netease is null "
-                            'limit {},{}'.format(offset, limit))
+                            'limit {}'.format(default.SELECT_LIMIT))
         for id, in self.cursor.fetchall():
             first_param = "{}"
             fd = self.form_data.get_form_data(first_param=first_param, api_type=config.TYPE_WEAPI)
             yield scrapy.FormRequest(url='{}{}'.format(config.URL_ALBUM, id), formdata=fd,
                                      meta={'id': id}, callback=self.parse)
-        self.logger.info('get netease album\'s request list success,offset:{},limit:{}'.format(offset, limit))
 
     def parse(self, response):
         album_id = response.meta['id']
@@ -82,8 +75,3 @@ class AlbumNeteaseSpider(BaseSpider):
             self.logger.info('get netease album\'s songs success,album_id:{}'.format(album_id))
         else:
             self.logger.warning('get netease album\'s songs failed,album_id:{}'.format(album_id))
-        # 获取新的请求列表
-        self.count += 1
-        if self.count % self.limit == 0:
-            for request in self.prepare(self.count, self.limit):
-                yield request

@@ -41,11 +41,6 @@ class SceneSpider(RedisSpider):
     }
 
     def start_requests(self):
-        """
-        爬取电影列表总数
-
-        :return:
-        """
         yield scrapy.Request(url=config.URL_MOVIE_LIST + '11111', callback=self.parse)
 
     def parse(self, response):

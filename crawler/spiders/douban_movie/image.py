@@ -5,6 +5,7 @@
 # ----------------------
 import re
 import scrapy
+from crawler.configs import default
 from crawler.configs import douban as config
 from crawler.spiders.base import BaseSpider
 
@@ -32,27 +33,19 @@ class ImageDoubanSpider(BaseSpider):
         }
     }
 
-    def __init__(self, type=None, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.type = type
         self.type_movie = 'movie'
         self.type_celebrity = 'celebrity'
 
-    def prepare(self, offset, limit):
-        """
-        获取请求列表
-
-        :param offset:
-        :param limit:
-        :return:
-        """
+    def start_requests(self):
         if self.type == self.type_movie:
             self.cursor.execute(
                 'select movie_douban.id from movie_douban '
                 'left join image_movie_douban '
                 'on movie_douban.id=image_movie_douban.id_movie_douban '
                 'where image_movie_douban.id_movie_douban is null '
-                'limit {},{}'.format(offset, limit))
+                'limit {}'.format(default.SELECT_LIMIT))
             for id, in self.cursor.fetchall():
                 yield scrapy.Request(url="{}{}{}".format(config.URL_IMAGE_MOVIE_START, id, config.URL_IMAGE_MOVIE_END),
                                      cookies=config.get_cookie_douban(),
@@ -63,22 +56,14 @@ class ImageDoubanSpider(BaseSpider):
                 'left join image_celebrity_douban '
                 'on celebrity_douban.id=image_celebrity_douban.id_celebrity_douban '
                 'where image_celebrity_douban.id_celebrity_douban is null '
-                'limit {},{}'.format(offset, limit))
+                'limit {}'.format(default.SELECT_LIMIT))
             for id, in self.cursor.fetchall():
                 yield scrapy.Request(
                     url="{}{}{}".format(config.URL_IMAGE_CELEBRITY_START, id, config.URL_IMAGE_CELEBRITY_END),
                     cookies=config.get_cookie_douban(),
                     meta={'id': id}, callback=self.parse)
-        self.logger.info(
-            'get douban image\'s request list success,type:{},offset:{},limit:{}'.format(self.type, offset, limit))
 
     def parse(self, response):
-        """
-        解析电影图片
-
-        :param response:
-        :return:
-        """
         id = response.meta['id']
         image_list = response.xpath('//div[@class="article"]//li')
         if image_list:
@@ -104,8 +89,3 @@ class ImageDoubanSpider(BaseSpider):
             self.logger.info('get douban image success,id:{},type:{}'.format(id, self.type))
         else:
             self.logger.warning('get douban image failed,id:{},type:{}'.format(id, self.type))
-        # 获取新的请求列表
-        self.count += 1
-        if self.count % self.limit == 0:
-            for request in self.prepare(self.count, self.limit):
-                yield request

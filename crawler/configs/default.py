@@ -22,8 +22,7 @@ DB_CHARSET = 'utf8mb4'
 BATCH_NUM = 2
 
 # 当前请求列表数量限制
-# REQUEST_NOW = 100
-REQUEST_NOW = 3
+SELECT_LIMIT = 100
 
 # 随机请求头列表
 USER_AGENT_LIST = [

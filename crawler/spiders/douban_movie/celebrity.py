@@ -5,11 +5,9 @@
 # ----------------------
 import re
 import time
-
 import scrapy
-from crawler.tools.database_pool import database_pool
+from crawler.configs import default
 from crawler.configs import douban as config
-from scrapy_redis.spiders import RedisSpider
 from crawler.spiders.base import BaseSpider
 
 from crawler.items.douban import CelebrityDouban
@@ -33,21 +31,12 @@ class CelebrityDoubanSpider(BaseSpider):
         }
     }
 
-    def prepare(self, offset, limit):
-        """
-        获取请求列表
-
-        :param offset:
-        :param limit:
-        :return:
-        """
-        self.cursor.execute('select id from celebrity_douban where is_updated=0 '
-                            'limit {},{}'.format(offset, limit))
+    def start_requests(self):
+        self.cursor.execute('select id from celebrity_douban limit {}'.format(default.SELECT_LIMIT))
         for id, in self.cursor.fetchall():
             yield scrapy.Request(url="{}{}/".format(config.URL_CELEBRITY, id),
                                  cookies=config.get_cookie_douban(),
                                  meta={'id': id}, callback=self.parse)
-        self.logger.info('get douban celebrity\'s request list success,offset:{},limit:{}'.format(offset, limit))
 
     def parse(self, response):
         celebrity_id = response.meta['id']
@@ -56,7 +45,11 @@ class CelebrityDoubanSpider(BaseSpider):
             title = response.xpath('//h1/text()').get()
             sex = info.xpath('.//span[text()="性别"]/../text()[2]').get()
             imdb_id = info.xpath('.//span[text()="imdb编号"]/following-sibling::a/text()').get()
-            birth_date = info.xpath('.//span[text()="出生日期"]/../text()[2]').get()
+
+            birth_date_xp = info.xpath('.//span[text()="出生日期"]/../text()[2]').get()
+            birth_re = re.search('\d{4}-\d{2}-\d{2}', birth_date_xp) if birth_date_xp is not None else ''
+            birth = birth_re.group() if birth_re != '' else 0
+
             # 豆瓣影人
             item_celebrity = CelebrityDouban()
             item_celebrity['id'] = celebrity_id
@@ -70,9 +63,7 @@ class CelebrityDoubanSpider(BaseSpider):
                 item_celebrity['sex'] = 1
             elif re.search('女', sex) is not None:
                 item_celebrity['sex'] = 0
-            birth = re.search('\d{4}-\d{2}-\d{2}', birth_date).group() if birth_date is not None else None
-            item_celebrity['birth_date'] = int(
-                time.mktime(time.strptime(birth, '%Y-%m-%d'))) if birth is not None else 0
+            item_celebrity['birth_date'] = int(time.mktime(time.strptime(birth, '%Y-%m-%d')))
             item_celebrity['url_portrait'] = re.search('p(\d+)', response.xpath(
                 '//div[@class="pic"]//a[@class="nbg"]/@href').get()).group(1)
             summary_body = response.xpath('//div[@id="intro"]/div[@class="bd"]/span')
@@ -128,8 +119,3 @@ class CelebrityDoubanSpider(BaseSpider):
             self.logger.info('get douban celebrity success,id:{}'.format(celebrity_id))
         else:
             self.logger.warning('get douban celebrity failed,id:{}'.format(celebrity_id))
-        # 获取新的请求列表
-        self.count += 1
-        if self.count % self.limit == 0:
-            for request in self.prepare(self.count, self.limit):
-                yield request

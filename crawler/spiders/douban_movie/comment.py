@@ -5,8 +5,8 @@
 # ----------------------
 import re
 import time
-
 import scrapy
+from crawler.configs import default
 from crawler.configs import douban as config
 from crawler.spiders.base import BaseSpider
 
@@ -29,24 +29,16 @@ class CommentDoubanSpider(BaseSpider):
         }
     }
 
-    def prepare(self, offset, limit):
-        """
-        获取请求列表
-
-        :param offset:
-        :param limit:
-        :return:
-        """
+    def start_requests(self):
         self.cursor.execute('select movie_douban.id from movie_douban '
                             'left join comment_movie_douban '
                             'on movie_douban.id=comment_movie_douban.id_movie_douban '
                             'where comment_movie_douban.id_movie_douban is null '
-                            'limit {},{}'.format(offset, limit))
+                            'limit {}'.format(default.SELECT_LIMIT))
         for id, in self.cursor.fetchall():
             yield scrapy.Request(url="{}{}{}".format(config.URL_COMMENT_MOVIE_START, id, config.URL_COMMENT_MOVIE_END),
                                  cookies=config.get_cookie_douban(),
                                  meta={'id': id}, callback=self.parse)
-        self.logger.info('get douban comment\'s request list success,offset:{},limit:{}'.format(offset, limit))
 
     def parse(self, response):
         movie_id = response.meta['id']
@@ -75,8 +67,4 @@ class CommentDoubanSpider(BaseSpider):
             self.logger.info('get douban movie\'s comments success,id:{}'.format(movie_id))
         else:
             self.logger.warning('get douban movie\'s comments failed,id:{}'.format(movie_id))
-        # 获取新的请求列表
-        self.count += 1
-        if self.count % self.limit == 0:
-            for request in self.prepare(self.count, self.limit):
-                yield request
+

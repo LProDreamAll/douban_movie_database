@@ -5,6 +5,7 @@
 # ----------------------
 import re
 import scrapy
+from crawler.configs import default
 from crawler.configs import douban as config
 from crawler.spiders.base import BaseSpider
 
@@ -35,20 +36,12 @@ class MovieDoubanSpider(BaseSpider):
         }
     }
 
-    def prepare(self, offset, limit):
-        """
-        获取请求列表
-
-        :param offset:
-        :param limit:
-        :return:
-        """
-        self.cursor.execute('select id from movie_douban where  limit {},{}'.format(offset, limit))
+    def start_requests(self):
+        self.cursor.execute('select id from movie_douban limit {}'.format(default.SELECT_LIMIT))
         for id, in self.cursor.fetchall():
             yield scrapy.Request(url="{}{}/".format(config.URL_MOVIE, id),
                                  cookies=config.get_cookie_douban(),
                                  meta={'id': id}, callback=self.parse)
-        self.logger.info('get douban movie\'s request list success,offset:{},limit:{}'.format(offset, limit))
 
     def parse(self, response):
         movie_id = response.meta['id']
@@ -56,6 +49,29 @@ class MovieDoubanSpider(BaseSpider):
             info = response.xpath('//div[@id="info"]')
             title = response.xpath('//h1/span[1]/text()').get()
             type_list = info.xpath('span[@property="v:genre"]/text()').getall()
+
+            imdb_xp = info.xpath('span[text()="IMDb链接:"]/following-sibling::a/text()').get()
+            imdb_re = re.search('tt(\d+)', imdb_xp) if imdb_xp is not None else ''
+            id_movie_imdb = imdb_re.group(1) if imdb_re != '' else 0
+
+            year_xp = response.xpath('//h1/span[@class="year"]/text()').get()
+            year_re = re.search('[(](\d+)[)]', year_xp) if year_xp is not None else ''
+            start_year = year_re.group(1) if year_re != '' else 0
+
+            name_zh_xp = re.search('[\u4e00-\u9fff()：\d\s]*', title) if title is not None else ''
+            name_zh = name_zh_xp.group().strip() if name_zh_xp != '' else ''
+
+            name_origin_xp = re.search('[\u4e00-\u9fff()\d\s]*(.*)', title) if title is not None else ''
+            name_origin = name_origin_xp.group(1).strip() if name_origin_xp != '' else ''
+
+            runtime = info.xpath('span[@property="v:runtime"]/@content').get()
+
+            url_poster_xp = response.xpath('//a[@class="nbgnbg"]/img/@src').get()
+            url_poster_re = re.search('[ps](\d+)', url_poster_xp) if url_poster_xp is not None else ''
+            url_poster = url_poster_re.group(1) if url_poster_re != '' else ''
+
+            see_list = response.xpath('//div[@class="subject-others-interests-ft"]/a/text()').getall()
+
             # 豆瓣电影
             item_movie = MovieDouban()
             item_movie['id'] = movie_id
@@ -65,22 +81,13 @@ class MovieDoubanSpider(BaseSpider):
                 item_movie['id_type_video'] = 3
             elif '短片' in type_list:
                 item_movie['id_type_video'] = 4
-            imdb = info.xpath('span[text()="IMDb链接:"]/following-sibling::a/text()').get()
-            imdb_id = re.search('tt(\d+)', imdb).group(1) if imdb is not None else 0
-            item_movie['id_movie_imdb'] = imdb_id
-            year = response.xpath('//h1/span[@class="year"]/text()').get()
-            start_year = re.search('[(](\d+)[)]', year).group(1) if year is not None else 0
+            item_movie['id_movie_imdb'] = id_movie_imdb
             item_movie['start_year'] = start_year
-            name_zh = re.search('[\u4e00-\u9fff()\d\s]*', title).group().strip() if title is not None else ''
             item_movie['name_zh'] = name_zh
-            item_movie['name_origin'] = re.search('[\u4e00-\u9fff()\d\s]*(.*)',
-                                                  title).group(1).strip() if title is not None else ''
-            runtime = info.xpath('span[@property="v:runtime"]/@content').get()
+            item_movie['name_origin'] = name_origin
             item_movie['runtime'] = runtime if runtime is not None else 0
-            item_movie['url_poster'] = re.search('[ps](\d+)',
-                                                 response.xpath('//a[@class="nbgnbg"]/img/@src').get()).group(1)
+            item_movie['url_poster'] = url_poster
             item_movie['summary'] = ''.join(response.xpath('//span[@property="v:summary"]/text()').getall())
-            see_list = response.xpath('//div[@class="subject-others-interests-ft"]/a/text()').getall()
             item_movie['have_seen'] = 0
             item_movie['wanna_see'] = 0
             for see in see_list:
@@ -92,17 +99,20 @@ class MovieDoubanSpider(BaseSpider):
             print('--------------------------------------')
             print(item_movie)
             yield item_movie
+
+            trailer_xp = response.xpath('//li[@class="label-trailer"]/a/@href').get()
+            trailer_re = re.search('\d+', trailer_xp) if trailer_xp is not None else ''
+
             # 电影预告片
             item_trailer = TrailerMovieDouban()
-            trailer = response.xpath('//li[@class="label-trailer"]/a/@href').get()
-            item_trailer['id'] = re.search('\d+', trailer).group() if trailer is not None else 0
+            item_trailer['id'] = trailer_re.group() if trailer_re is not None else 0
             item_trailer['id_movie_douban'] = movie_id
             item_trailer['url_video'] = ''
             yield item_trailer
             # 电影别名
             alias_label = info.xpath('span[text()="又名:"]').get()
             if alias_label is not None:
-                alias_position = 1 if imdb is None else 3
+                alias_position = 1 if imdb_xp is None else 3
                 alias_list = info.xpath('text()[last()-{}]'.format(alias_position)).get().split('/')
                 for alias in alias_list:
                     item_alias = AliasMovieDouban()
@@ -200,7 +210,7 @@ class MovieDoubanSpider(BaseSpider):
                 for resource in resource_list:
                     item_resource = ResourceMovie()
                     item_resource['id_movie_douban'] = movie_id
-                    item_resource['id_movie_imdb'] = imdb_id
+                    item_resource['id_movie_imdb'] = id_movie_imdb
                     item_resource['id_website_resource'] = 1
                     website = resource.xpath('a/text()').get().strip()
                     if website in config.WEBSITE_RESOURCE_LIST:
@@ -221,8 +231,3 @@ class MovieDoubanSpider(BaseSpider):
             self.logger.info('get douban movie success,id:{}'.format(movie_id))
         else:
             self.logger.warning('get douban movie failed,id:{}'.format(movie_id))
-        # 获取新的请求列表
-        self.count += 1
-        if self.count % self.limit == 0:
-            for request in self.prepare(self.count, self.limit):
-                yield request

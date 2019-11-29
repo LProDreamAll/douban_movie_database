@@ -17,28 +17,38 @@ class SearchDoubanPipeline(BasePipeline):
         super().__init__()
         # 待处理数据列表
         self.item_dict = {
-            'ResourceMovie': {
-                'sql': 'insert into resource_movie(id,id_movie_douban,id_movie_imdb) '
-                       'values (%s,%s,%s) '
-                       'on duplicate key update '
-                       'id_movie_douban=values(id_movie_douban), '
-                       'id_movie_imdb=values(id_movie_imdb) '
-            },
             'MovieDouban': {
-                'sql': 'insert ignore into movie_douban(id,name_zh) values (%s,%s)'
+                'sql': 'insert ignore into movie_douban(id,name_zh,start_year) values (%s,%s,%s)'
             },
             'CelebrityDouban': {
-                'sql': 'insert ignore into celebrity_douban(id,name_zh) values (%s,%s)'
+                'sql': 'insert ignore into celebrity_douban(id,name_origin) values (%s,%s)'
+            },
+            'ResourceMovie': {
+                'sql': 'insert into resource_movie(id,id_movie_douban) '
+                       'values (%s,%s) '
+                       'on duplicate key update '
+                       'id_movie_douban=values(id_movie_douban) '
             },
             'MovieScene': {
-                'sql': 'update movie_scene set id_movie_douban=%s where id=%s'
+                'sql': 'insert into movie_scene(id,id_movie_douban) values(%s,%s) '
+                       'on duplicate key update '
+                       'id_movie_douban=values(id_movie_douban) '
             },
             'CelebrityScene': {
-                'sql': 'update celebrity_scene set id_celebrity_douban=%s where id=%s'
+                'sql': 'insert into celebrity_scene(id,id_celebrity_douban) values (%s,%s) '
+                       'on duplicate key update '
+                       'id_celebrity_douban=values(id_celebrity_douban) '
             },
-            'MovieResource': {
-                'sql': ''
-            }
+            'MovieImdb': {
+                'sql': 'insert into movie_imdb(id,is_douban_updated) values (%s,%s) '
+                       'on duplicate key update '
+                       'is_douban_updated=values(is_douban_updated) '
+            },
+            'CelebrityImdb': {
+                'sql': 'insert into celebrity_imdb(id,is_douban_updated) values (%s,%s) '
+                       'on duplicate key update '
+                       'is_douban_updated=values(is_douban_updated) '
+            },
         }
         # 每个表添加data列表
         for table in self.item_dict.keys():
