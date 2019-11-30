@@ -29,13 +29,14 @@ class ImdbSpider(BaseSpider):
         }
     }
 
-    def __init__(self,  **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.type_new = 'new'
 
     def start_requests(self):
         self.cursor.execute(
-            'select id_movie_imdb from movie_douban where id_movie_imdb!=0 and is_updated=1 limit {}'
+            'select id_movie_imdb from movie_douban '
+            'where id_movie_imdb!=0 limit {}'
                 .format(default.SELECT_LIMIT))
         for id, in self.cursor.fetchall():
             yield scrapy.Request(url='{}tt{}'.format(config.URL_OMDB_SEARCH, '%07d' % id),
@@ -69,4 +70,3 @@ class ImdbSpider(BaseSpider):
             self.logger.info('get omdb\'s movie success,imdb_id:{}'.format(imdb_id))
         else:
             self.logger.warning('get omdb\'s movie failed,imdb_id:{}'.format(imdb_id))
-

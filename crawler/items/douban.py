@@ -100,7 +100,7 @@ class CelebrityDouban(scrapy.Item):
     birth_date = scrapy.Field()
     url_portrait = scrapy.Field()
     summary = scrapy.Field()
-    update_date= scrapy.Field()
+    update_date = scrapy.Field()
 
 
 class AliasCelebrityDouban(scrapy.Item):
@@ -130,3 +130,30 @@ class CommentMovieDouban(scrapy.Item):
 class UserDouban(scrapy.Item):
     id = scrapy.Field()
     name_zh = scrapy.Field()
+
+
+class ReviewMovieDouban(scrapy.Item):
+    id = scrapy.Field()
+    agree_vote = scrapy.Field()
+    against_vote = scrapy.Field()
+    create_datetime = scrapy.Field()
+    title = scrapy.Field()
+    content = scrapy.Field()
+
+
+class UserDoubanToReviewMovieDouban(scrapy.Item):
+    id_user_douban = scrapy.Field()
+    id_review_movie_douban = scrapy.Field()
+
+
+class MovieDoubanToReviewMovieDouban(scrapy.Item):
+    id_movie_douban = scrapy.Field()
+    id_review_movie_douban = scrapy.Field()
+
+
+class UserDoubanToMovieDouban(scrapy.Item):
+    id_user_douban = scrapy.Field()
+    id_movie_douban = scrapy.Field()
+    score = scrapy.Field()
+    is_wish = scrapy.Field()
+    is_seen = scrapy.Field()

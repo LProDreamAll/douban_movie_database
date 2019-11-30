@@ -19,12 +19,14 @@ class ResourceMovie(scrapy.Item):
 
 class MovieDouban(scrapy.Item):
     id = scrapy.Field()
+    id_movie_imdb = scrapy.Field()
     name_zh = scrapy.Field()
     start_year = scrapy.Field()
 
 
 class CelebrityDouban(scrapy.Item):
     id = scrapy.Field()
+    id_celebrity_imdb = scrapy.Field()
     name_en = scrapy.Field()
 
 

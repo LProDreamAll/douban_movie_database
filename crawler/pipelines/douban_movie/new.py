@@ -6,9 +6,9 @@
 from crawler.pipelines.base import BasePipeline
 
 
-class TrailerDoubanPipeline(BasePipeline):
+class NewDoubanPipeline(BasePipeline):
     """
-    豆瓣电影预告片相关
+    豆瓣电影最新上映相关
 
     """
 
@@ -16,10 +16,8 @@ class TrailerDoubanPipeline(BasePipeline):
         super().__init__()
         # 待处理数据列表
         self.item_dict = {
-            'TrailerMovieDouban': {
-                'sql': 'insert into trailer_movie_douban values (%s,%s,%s) '
-                       'on duplicate  key update '
-                       'url_video=values(url_video)'
+            'MovieDouban': {
+                'sql': 'insert ignore into movie_douban(id,name_zh) values (%s,%s)'
             }
         }
         # 每个表添加data列表

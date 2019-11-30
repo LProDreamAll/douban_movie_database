@@ -204,6 +204,7 @@ class SearchDoubanSpider(BaseSpider):
                     if self.type == self.type_movie_imdb:
                         item_movie_douban = MovieDouban()
                         item_movie_douban['id'] = title_id
+                        item_movie_douban['id_movie_imdb'] = id
                         item_movie_douban['name_zh'] = title_name
                         item_movie_douban['start_year'] = title_year
                         yield item_movie_douban
@@ -233,6 +234,7 @@ class SearchDoubanSpider(BaseSpider):
                     if self.type == self.type_celebrity_imdb:
                         item_celebrity_douban = CelebrityDouban()
                         item_celebrity_douban['id'] = title_id
+                        item_celebrity_douban['id_celebrity_imdb'] = id
                         item_celebrity_douban['name_en'] = title_name
                         yield item_celebrity_douban
                         print('----------')

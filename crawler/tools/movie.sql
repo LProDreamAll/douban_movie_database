@@ -244,7 +244,7 @@ create table trailer_movie_douban
     # 豆瓣电影ID
     id_movie_douban bigint unsigned not null default 0,
     # 预告片mp4链接
-    url_video       varchar(255)    not null default '',
+    url_video       varchar(1000)   not null default '',
 
     index (id_movie_douban)
 ) ENGINE = InnoDB
@@ -302,13 +302,15 @@ create table review_movie_douban
     against_vote    int unsigned    not null default 0,
     # 影评日期时间
     create_datetime bigint(13)      not null default 0,
+    # 影评标题
+    title           varchar(255)    not null default '',
     # 影评内容
     content         text,
 
     index (agree_vote desc),
     index (against_vote desc),
     index (create_datetime desc),
-    index (content(20))
+    index (title)
 ) ENGINE = InnoDB
   default charset = utf8mb4;
 
@@ -1053,33 +1055,50 @@ CREATE TABLE place_scene_to_type_place_scene
 
 # 1.网易云音乐基础表---------------------------------------
 
+# 网易云音乐对应的电影
+CREATE TABLE movie_netease
+(
+    # 电影ID
+    id_movie_douban bigint unsigned  not null default 0,
+    # 网易云音乐ID
+    id_netease      bigint unsigned  not null default 0,
+    # 类型 0:未知 1:歌曲 2:歌单 3;专辑
+    netease_type    tinyint unsigned not null default 0,
+    # 权值 1-10 依次降低
+    sort            tinyint unsigned not null default 0,
+
+    primary key (id_movie_douban, id_netease, netease_type),
+    index (sort asc)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+
 # 歌曲
 CREATE TABLE song_netease
 (
-    id              bigint unsigned NOT NULL primary key,
-    # 推荐搜索之歌曲所属豆瓣电影ID （由歌单、专辑得到的歌曲此ID为0）
-    id_movie_douban bigint unsigned not null default 0,
-    # 歌曲中文名
-    name_zh         varchar(255)    not null default '',
-
-    index (id_movie_douban),
-    index (name_zh)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
-insert into song_netease
-values (0, 0, '');
-
-# 歌曲
-CREATE TABLE artist_netease
-(
     id      bigint unsigned NOT NULL primary key,
-    # 歌手中文名
+    # 歌曲中文名
     name_zh varchar(255)    not null default '',
 
     index (name_zh)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
-insert into artist_netease
+insert into song_netease
+values (0, '');
+
+# 歌手
+CREATE TABLE artist_netease
+(
+    id           bigint unsigned NOT NULL primary key,
+    # 歌手中文名
+    name_zh      varchar(255)    not null default '',
+    # 歌手照片  http://p1.music.126.net/ + url_cover
+    url_portrait varchar(1000)   not null default '',
+
+    index (name_zh)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+insert into artist_netease(id, name_zh)
 values (0, '');
 
 # 用户
@@ -1098,21 +1117,18 @@ values (0, '未知');
 # 歌单
 CREATE TABLE playlist_netease
 (
-    id              bigint unsigned   NOT NULL primary key,
-    # 推荐搜索之歌单所属豆瓣电影ID
-    id_movie_douban bigint unsigned   not null default 0,
+    id          bigint unsigned   NOT NULL primary key,
     # 歌单中文名
-    name_zh         varchar(255)      not null default '',
+    name_zh     varchar(255)      not null default '',
     # 歌单歌曲总数
-    total           smallint unsigned NOT NULL default 0,
+    total       smallint unsigned NOT NULL default 0,
     # 歌单播放次数
-    play_count      int unsigned      NOT NULL default 0,
-    # 封面图片
-    url_cover       varchar(1000)     not null default '',
+    play_count  int unsigned      NOT NULL default 0,
+    # 封面照片 http://p1.music.126.net/ + url_cover
+    url_cover   varchar(1000)     not null default '',
     # 歌单描述
-    description     varchar(1000)     not null default '',
+    description varchar(1000)     not null default '',
 
-    index (id_movie_douban),
     index (name_zh),
     index (play_count desc)
 ) ENGINE = InnoDB
@@ -1121,15 +1137,14 @@ CREATE TABLE playlist_netease
 # 专辑
 CREATE TABLE album_netease
 (
-    id              bigint unsigned   NOT NULL primary key,
-    # 推荐搜索之专辑所属豆瓣电影ID
-    id_movie_douban bigint unsigned   not null default 0,
+    id        bigint unsigned   NOT NULL primary key,
     # 专辑中文名
-    name_zh         varchar(255)      not null default '',
+    name_zh   varchar(255)      not null default '',
     # 专辑歌曲总数
-    total           smallint unsigned NOT NULL default 0,
+    total     smallint unsigned NOT NULL default 0,
+    # 封面照片 http://p1.music.126.net/ + url_cover
+    url_cover varchar(1000)     not null default '',
 
-    index (id_movie_douban),
     index (name_zh),
     index (total)
 ) ENGINE = InnoDB
@@ -1138,7 +1153,8 @@ CREATE TABLE album_netease
 # 评论 (默认热评)
 CREATE TABLE comment_netease
 (
-    id              bigint unsigned NOT NULL primary key,
+    # id为0,则此歌暂无评论
+    id              bigint unsigned not null default 0,
     # 歌曲ID
     id_song_netease bigint unsigned not null default 0,
     # 用户ID
@@ -1150,7 +1166,7 @@ CREATE TABLE comment_netease
     # 赞同数
     agree_vote      int unsigned    NOT NULL default 0,
 
-    index (id_song_netease),
+    primary key (id_song_netease, id),
     index (id_user_netease),
     index (create_datetime desc),
     index (agree_vote desc)
@@ -1527,12 +1543,8 @@ alter table place_scene
 alter table place_scene
     add foreign key (id_city_scene) references city_scene (id);
 
-alter table song_netease
-    add foreign key (id_movie_douban) references movie_douban (id);
-alter table playlist_netease
-    add foreign key (id_movie_douban) references movie_douban (id);
-alter table album_netease
-    add foreign key (id_movie_douban) references movie_douban (id);
+alter table movie_netease
+    add foreign key (id_movie_douban) references movie_douban(id);
 alter table comment_netease
     add foreign key (id_song_netease) references song_netease (id);
 alter table comment_netease

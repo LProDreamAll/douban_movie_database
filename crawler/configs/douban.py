@@ -11,7 +11,6 @@
 import random
 import string
 
-
 # 豆瓣电影 + ID + /
 URL_MOVIE = 'https://movie.douban.com/subject/'
 
@@ -41,6 +40,12 @@ URL_COMMENT_MOVIE_END = '/comments?start=0&limit=20&sort=new_score&status=P'
 
 # 电影预告片链接 + ID + /
 URL_TRAILER_MOVIE = 'https://movie.douban.com/trailer/'
+
+# 豆瓣电影最新上映 + start
+URL_MOVIE_NEW = 'https://movie.douban.com/j/new_search_subjects?sort=R&range=0,10&tags=&start='
+
+# 最新上映 最大数
+NEW_MOVIE_MAX = 1000
 
 # 豆瓣搜索解密JS路径
 # console模式

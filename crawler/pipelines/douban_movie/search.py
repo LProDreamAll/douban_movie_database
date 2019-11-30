@@ -18,10 +18,10 @@ class SearchDoubanPipeline(BasePipeline):
         # 待处理数据列表
         self.item_dict = {
             'MovieDouban': {
-                'sql': 'insert ignore into movie_douban(id,name_zh,start_year) values (%s,%s,%s)'
+                'sql': 'insert ignore into movie_douban(id,id_movie_imdb,name_zh,start_year) values (%s,%s,%s,%s)'
             },
             'CelebrityDouban': {
-                'sql': 'insert ignore into celebrity_douban(id,name_origin) values (%s,%s)'
+                'sql': 'insert ignore into celebrity_douban(id,id_celebrity_imdb,name_origin) values (%s,%s,%s)'
             },
             'ResourceMovie': {
                 'sql': 'insert into resource_movie(id,id_movie_douban) '

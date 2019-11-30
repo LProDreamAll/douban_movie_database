@@ -38,8 +38,7 @@ class CommentNeteaseSpider(BaseSpider):
         self.cursor.execute("select song_netease.id from song_netease "
                             "left join comment_netease "
                             "on song_netease.id=comment_netease.id_song_netease "
-                            "where song_netease.id_movie_douban!=0 "
-                            "and comment_netease.id_song_netease is null "
+                            "where comment_netease.id_song_netease is null "
                             'limit {}'.format(default.SELECT_LIMIT))
         for id, in self.cursor.fetchall():
             first_param_dict = config.EAPI_PARAMS
@@ -54,27 +53,42 @@ class CommentNeteaseSpider(BaseSpider):
 
     def parse(self, response):
         song_id = response.meta['id']
-        print(response.text)
         content = json.loads(response.text)
+        # 成功获取结果
         if 'hotComments' in content:
-            for comment in content['hotComments']:
+            result = content['hotComments']
+            # 获取结果不为空
+            if result:
+                for comment in result:
+                    item_comment = CommentNetease()
+                    item_comment['id'] = comment['commentId']
+                    item_comment['id_song_netease'] = song_id
+                    item_comment['id_user_netease'] = comment['user']['userId']
+                    item_comment['create_datetime'] = datetime.fromtimestamp(
+                        int(comment['time']) / 1000).strftime('%Y-%m-%d %H:%M:%S')
+                    item_comment['content'] = comment['content']
+                    item_comment['agree_vote'] = comment['likedCount']
+                    yield item_comment
+                    print('------------')
+                    print(item_comment)
+                    item_user = UserNetease()
+                    item_user['id'] = comment['user']['userId']
+                    item_user['name_zh'] = comment['user']['nickname']
+                    yield item_user
+                    print('-----------')
+                    print(item_user)
+                self.logger.info('get netease hot comment success,movie_id:{}'.format(song_id))
+            # 获取结果为空,此歌暂无热门评论,标记为已搜索
+            else:
                 item_comment = CommentNetease()
-                item_comment['id'] = comment['commentId']
+                item_comment['id'] = 0
                 item_comment['id_song_netease'] = song_id
-                item_comment['id_user_netease'] = comment['user']['userId']
-                item_comment['create_datetime'] = datetime.fromtimestamp(
-                    int(comment['time']) / 1000).strftime('%Y-%m-%d %H:%M:%S')
-                item_comment['content'] = comment['content']
-                item_comment['agree_vote'] = comment['likedCount']
+                item_comment['id_user_netease'] = 0
+                item_comment['create_datetime'] = 0
+                item_comment['content'] = ''
+                item_comment['agree_vote'] = 0
                 yield item_comment
-                print('------------')
-                print(item_comment)
-                item_user = UserNetease()
-                item_user['id'] = comment['user']['userId']
-                item_user['name_zh'] = comment['user']['nickname']
-                yield item_user
-                print('-----------')
-                print(item_user)
-            self.logger.info('get netease hot comment success,movie_id:{}'.format(song_id))
+                self.logger.info('get netease hot comment None,movie_id:{}'.format(song_id))
+        # 获取结果失败
         else:
             self.logger.warning('get netease hot comment failed,movie_id:{}'.format(song_id))

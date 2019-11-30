@@ -12,11 +12,12 @@ from crawler.spiders.base import BaseSpider
 
 from crawler.items.douban import CommentMovieDouban
 from crawler.items.douban import UserDouban
+from crawler.items.douban import UserDoubanToMovieDouban
 
 
 class CommentDoubanSpider(BaseSpider):
     """
-    豆瓣影人相关
+    豆瓣电影评论相关
 
     """
     name = 'comment_douban'
@@ -52,6 +53,7 @@ class CommentDoubanSpider(BaseSpider):
                 print('--------------')
                 print(item_user)
                 yield item_user
+
                 item_comment = CommentMovieDouban()
                 item_comment['id_movie_douban'] = movie_id
                 item_comment['id_user_douban'] = user_id
@@ -64,7 +66,17 @@ class CommentDoubanSpider(BaseSpider):
                 print('-------------------------')
                 print(item_comment)
                 yield item_comment
+
+                score_xp = comment.xpath('//span[@class="comment-info"]/span[2]/@class').get()
+                score_re = re.search('\d+', score_xp) if score_xp is not None else 0
+
+                item_user_movie = UserDoubanToMovieDouban()
+                item_user_movie['id_user_douban'] = user_id
+                item_user_movie['id_movie_douban'] = movie_id
+                item_user_movie['score'] = int(score_re.group()) / 5 if score_re != 0 else 0
+                item_user_movie['is_wish'] = 0
+                item_user_movie['is_seen'] = 1
+                yield item_user_movie
             self.logger.info('get douban movie\'s comments success,id:{}'.format(movie_id))
         else:
             self.logger.warning('get douban movie\'s comments failed,id:{}'.format(movie_id))
-

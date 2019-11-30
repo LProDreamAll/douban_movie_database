@@ -7,27 +7,40 @@
 from scrapy import cmdline
 
 spiders = {
-    0: 'movie_douban',
-    1: 'celebrity_douban',
-    2: 'comment_douban',
-    3: 'trailer_douban',
-    4: 'image_douban -a type=movie',
-    5: 'image_douban -a type=celebrity',
-    6: 'search_douban -a type=movie_imdb',
-    7: 'search_douban -a type=celebrity_imdb',
-    8: 'search_douban -a type=movie_scene',
-    9: 'search_douban -a type=celebrity_scene',
-    10: 'search_douban -a type=movie_resource',
+    # IMDB => 豆瓣
+    1: 'search_douban -a type=movie_imdb',
+    2: 'search_douban -a type=celebrity_imdb',
 
-    11: 'movie_imdb',
+    # IMDB评分
+    3: 'movie_imdb',
 
-    20: 'search_netease',
-    21: 'playlist_netease',
-    22: 'comment_netease',
-    23: 'album_netease',
+    # 豆瓣
+    11: 'new_douban',
 
-    31: 'scene',
+    # 豆瓣详情
+    12: 'movie_douban',
+    13: 'celebrity_douban',
 
+    14: 'comment_douban',
+    15: 'trailer_douban',
+
+    16: 'image_douban -a type=movie',
+    17: 'image_douban -a type=celebrity',
+
+    # 场景
+    21: 'scene',
+
+    # 场景 => 豆瓣
+    22: 'search_douban -a type=movie_scene',
+    23: 'search_douban -a type=celebrity_scene',
+
+    # 网易云音乐
+    31: 'search_netease',
+    32: 'comment_netease',
+    33: 'playlist_netease',
+    34: 'album_netease',
+
+    # 资源
     41: 'dy2018_resource -a type=all',
     42: 'dy2018_resource -a type=new',
     43: 'loldytt_resource -a type=all',
@@ -42,9 +55,9 @@ spiders = {
     52: 'goudaitv_resource -a  type=new',
     53: 'zxzjs_resource -a type=all',
     54: 'zxzjs_resource -a type=new',
-    55: '',
-    56: '',
-    57: '',
+
+    # 资源 => 豆瓣
+    61: 'search_douban -a type=movie_resource',
 
 }
 cmdline.execute('scrapy crawl {}'.format(spiders.get(

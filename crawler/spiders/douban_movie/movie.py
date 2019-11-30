@@ -4,6 +4,8 @@
 # author: humingk
 # ----------------------
 import re
+import time
+
 import scrapy
 from crawler.configs import default
 from crawler.configs import douban as config
@@ -16,6 +18,11 @@ from crawler.items.douban import MovieDoubanToTypeMovie
 from crawler.items.douban import RateMovieDouban
 from crawler.items.douban import TagMovie
 from crawler.items.douban import AwardMovie
+from crawler.items.douban import UserDouban
+from crawler.items.douban import ReviewMovieDouban
+from crawler.items.douban import MovieDoubanToReviewMovieDouban
+from crawler.items.douban import UserDoubanToReviewMovieDouban
+from crawler.items.douban import UserDoubanToMovieDouban
 from crawler.items.douban import MovieDoubanToAwardMovie
 from crawler.items.douban import TrailerMovieDouban
 from crawler.items.resource import ResourceMovie
@@ -37,7 +44,8 @@ class MovieDoubanSpider(BaseSpider):
     }
 
     def start_requests(self):
-        self.cursor.execute('select id from movie_douban limit {}'.format(default.SELECT_LIMIT))
+        self.cursor.execute('select id from movie_douban '
+                            'where update_date=0 limit {}'.format(default.SELECT_LIMIT))
         for id, in self.cursor.fetchall():
             yield scrapy.Request(url="{}{}/".format(config.URL_MOVIE, id),
                                  cookies=config.get_cookie_douban(),
@@ -70,6 +78,11 @@ class MovieDoubanSpider(BaseSpider):
             url_poster_re = re.search('[ps](\d+)', url_poster_xp) if url_poster_xp is not None else ''
             url_poster = url_poster_re.group(1) if url_poster_re != '' else ''
 
+            summary_list_xp = response.xpath('//span[@property="v:summary"]/text()').getall()
+            summary = ''
+            for summary_xp in summary_list_xp:
+                summary += summary_xp.strip()
+
             see_list = response.xpath('//div[@class="subject-others-interests-ft"]/a/text()').getall()
 
             # 豆瓣电影
@@ -87,7 +100,7 @@ class MovieDoubanSpider(BaseSpider):
             item_movie['name_origin'] = name_origin
             item_movie['runtime'] = runtime if runtime is not None else 0
             item_movie['url_poster'] = url_poster
-            item_movie['summary'] = ''.join(response.xpath('//span[@property="v:summary"]/text()').getall())
+            item_movie['summary'] = summary
             item_movie['have_seen'] = 0
             item_movie['wanna_see'] = 0
             for see in see_list:
@@ -204,6 +217,57 @@ class MovieDoubanSpider(BaseSpider):
                 print('--------------------------------------')
                 print(item_movie_to_award)
                 yield item_movie_to_award
+            # 电影影评
+            review_list = response.xpath('//div[@class="main review-item"]')
+            if review_list:
+                for review in review_list:
+                    user_id = review.xpath('header/a[@class="name"]/@href').get().split('/')[4]
+
+                    item_user = UserDouban()
+                    item_user['id'] = user_id
+                    item_user['name_zh'] = review.xpath('header/a[@class="name"]/text()').get()
+                    yield item_user
+
+                    date_xp = review.xpath('header/span[@content]/text()').get()
+                    review_title = review.xpath('div[@class="main-bd"]/h2/a/text()').get()
+                    review_id_xp = review.xpath('div[@class="main-bd"]/h2/a/@href').get()
+                    review_id_re = re.search('\d+', review_id_xp) if review_id_xp is not None else ''
+                    review_id = review_id_re.group() if review_id_re != '' else 0
+                    agree_vote = review.xpath('.//a[@title="有用"]/span/text()').get().strip()
+                    against_vote = review.xpath('.//a[@title="没用"]/span/text()').get().strip()
+
+                    item_review = ReviewMovieDouban()
+                    item_review['id'] = review_id
+                    item_review['agree_vote'] = agree_vote if agree_vote != '' else 0
+                    item_review['against_vote'] = against_vote if against_vote != '' else 0
+                    item_review['create_datetime'] = int(
+                        time.mktime(time.strptime(date_xp, '%Y-%m-%d %H:%M:%S'))) if date_xp is not None else 0
+                    item_review['title'] = review_title
+                    item_review['content'] = ''.join(
+                        review.xpath('.//div[@class="short-content"]/text()').getall()).strip().strip('()').strip()
+                    yield item_review
+                    print('------------')
+                    print(item_review)
+                    item_user_review = UserDoubanToReviewMovieDouban()
+                    item_user_review['id_user_douban'] = user_id
+                    item_user_review['id_review_movie_douban'] = review_id
+                    yield item_user_review
+                    item_movie_review = MovieDoubanToReviewMovieDouban()
+                    item_movie_review['id_movie_douban'] = movie_id
+                    item_movie_review['id_review_movie_douban'] = review_id
+                    yield item_movie_review
+
+                    score_xp = review.xpath('header/span[@title]/@class').get()
+                    score_re = re.search('\d+', score_xp) if score_xp is not None else ''
+                    score = int(score_re.group()) if score_re != '' else 0
+
+                    item_user_movie = UserDoubanToMovieDouban()
+                    item_user_movie['id_user_douban'] = user_id
+                    item_user_movie['id_movie_douban'] = movie_id
+                    item_user_movie['score'] = score / 5
+                    item_user_movie['is_wish'] = 0
+                    item_user_movie['is_seen'] = 1
+                    yield item_user_movie
             # 电影资源
             resource_list = response.xpath('//ul[@class="bs"]/li')
             if resource_list:

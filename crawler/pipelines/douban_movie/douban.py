@@ -83,7 +83,19 @@ class DoubanPipeline(BasePipeline):
             },
             'AliasCelebrityDouban': {
                 'sql': 'insert ignore into alias_celebrity_douban values (%s,%s,%s)'
-            }
+            },
+            'ReviewMovieDouban': {
+                'sql': 'insert ignore into review_movie_douban values (%s,%s,%s,%s,%s,%s)'
+            },
+            'UserDoubanToReviewMovieDouban': {
+                'sql': 'insert ignore into user_douban_to_review_movie_douban values (%s,%s)'
+            },
+            'MovieDoubanToReviewMovieDouban': {
+                'sql': 'insert ignore into movie_douban_to_review_movie_douban values (%s,%s)'
+            },
+            'UserDoubanToMovieDouban': {
+                'sql': 'insert ignore into user_douban_to_movie_douban values (%s,%s,%s,%s,%s)'
+            },
         }
         # 每个表添加data列表
         for table in self.item_dict.keys():

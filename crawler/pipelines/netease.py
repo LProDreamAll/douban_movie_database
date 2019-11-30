@@ -16,17 +16,22 @@ class NeteasePipeline(BasePipeline):
         super().__init__()
         # 待处理数据列表
         self.item_dict = {
+            'MovieNetease': {
+                'sql': 'insert ignore into movie_netease values (%s,%s,%s,%s)'
+            },
             'SongNetease': {
-                'sql': 'insert ignore into song_netease values (%s,%s,%s)'
+                'sql': 'insert ignore into song_netease values (%s,%s)'
             },
             'PlaylistNetease': {
-                'sql': 'insert ignore into playlist_netease values (%s,%s,%s,%s,%s,%s,%s)'
+                'sql': 'insert ignore into playlist_netease values (%s,%s,%s,%s,%s,%s)'
             },
             'AlbumNetease': {
                 'sql': 'insert ignore into album_netease values (%s,%s,%s,%s)'
             },
             'ArtistNetease': {
-                'sql': 'insert ignore into artist_netease values (%s,%s)'
+                'sql': 'insert ignore into artist_netease values (%s,%s,%s) '
+                       'on duplicate key update '
+                       'url_portrait=if(url_portrait="",values(url_portrait),url_portrait) '
             },
             'ArtistNeteaseToSongNetease': {
                 'sql': 'insert ignore into artist_netease_to_song_netease values (%s,%s)'

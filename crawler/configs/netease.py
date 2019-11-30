@@ -7,20 +7,18 @@ import json
 import random
 
 # 热评个数
-# NUM_HOT_COMMENT=100
-NUM_HOT_COMMENT=2
-
+NUM_HOT_COMMENT = 20
 
 # -----------------------------------
 
 # weapi 搜索链接 (类型集合)
-URL_SEARCH_TIPS = 'https://music.163.com/weapi/search/suggest/web'
+URL_WEAPI_SEARCH_TIPS = 'https://music.163.com/weapi/search/suggest/web'
 
 # eapi 搜索链接 （信息较全）(但类型单一)
-# URL_SEARCH_TIPS = 'https://music.163.com/eapi/v1/search/get'
+URL_EAPI_SEARCH_TIPS = 'https://music.163.com/eapi/v1/search/get'
 
 # eapi 请求参数中需要用到的搜索链接
-URL_SEARCH_TIPS_EAPI = '/api/v1/search/get'
+URL_SEARCH_TIPS_EAPI_NEED = '/api/v1/search/get'
 
 # eapi 歌曲热门评论链接 + ID
 URL_COMMENT_HOT = 'http://music.163.com/eapi/v1/resource/hotcomments/R_SO_4_'
