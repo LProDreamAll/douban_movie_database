@@ -34,6 +34,9 @@ spiders = {
     22: 'search_douban -a type=movie_scene',
     23: 'search_douban -a type=celebrity_scene',
 
+    # 知乎
+    26: 'movie_zhihu',
+
     # 网易云音乐
     31: 'search_netease',
     32: 'comment_netease',
@@ -61,5 +64,5 @@ spiders = {
 
 }
 cmdline.execute('scrapy crawl {}'.format(spiders.get(
-    1
+    26
 )).split())

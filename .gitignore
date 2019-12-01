@@ -1,3 +1,5 @@
+crawler/tools/zhihu_cookie.txt
+
 
 .idea/*
 
@@ -111,3 +113,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+将删除 crawler/configs/zhihu.py
+将删除 crawler/items/zhihu.py
+将删除 crawler/pipelines/zhihu.py
+将删除 crawler/spiders/zhihu.py
+将删除 crawler/tools/zhihu_cookie.txt

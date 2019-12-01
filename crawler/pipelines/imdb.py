@@ -23,7 +23,10 @@ class ImdbPipeline(BasePipeline):
                        'summary=values(summary)'
             },
             'RateImdb': {
-                'sql': 'insert ignore into rate_imdb values(%s,%s,%s,%s,%s)'
+                'sql': 'insert into rate_imdb values(%s,%s,%s,%s,%s) '
+                       'on duplicate key update '
+                       'tomato_score=values(tomato_score), '
+                       'mtc_score=values(mtc_score) '
             }
         }
         # 每个表添加data列表

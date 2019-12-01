@@ -32,6 +32,9 @@
  音乐：
  网易云音乐相关
 
+ 知乎：
+ 知乎电影相关
+
  表初始化
  选择是否添加外键关系
  IMDB转换SQL语句
@@ -403,8 +406,6 @@ create table celebrity_imdb
     name_en           varchar(255)         not null default '',
     # 出生年份
     birth_year        smallint(4) unsigned not null default 0,
-    # 死亡年份
-    death_year        smallint(4) unsigned not null default 0,
     # 是否更新豆瓣影人 0:未更新 1:已更新
     is_douban_updated tinyint(1)           not null default 0,
 
@@ -423,8 +424,6 @@ create table movie_imdb_to_celebrity_imdb
     id_celebrity_imdb bigint unsigned  not null,
     # 该IMDB名人在该IMDB电影中的职位
     id_profession     tinyint unsigned not null,
-    # 该人在该电影中工作描述
-    description       varchar(1000)    not null default '',
 
     primary key (id_movie_imdb, id_celebrity_imdb, id_profession)
 ) ENGINE = InnoDB
@@ -1222,6 +1221,54 @@ CREATE TABLE artist_netease_to_song_netease
 
 # 音乐 end ========================================================================================
 
+# 知乎 start ========================================================================================
+
+# 1.知乎基础表---------------------------------------
+
+# 知乎电影
+CREATE TABLE movie_zhihu
+(
+    # 知乎话题ID https://www.zhihu.com/topic/ + id + /hot
+    id              bigint unsigned not null default 0,
+    # 豆瓣电影ID
+    id_movie_douban bigint unsigned not null default 0,
+    # 知乎电影中文名
+    name_zh         varchar(255)    not null default '',
+    # 知乎评分
+    zhihu_score     decimal(3, 1)   not null default 0.0,
+    # 知乎评分票数
+    zhihu_vote      int unsigned    not null default 0,
+    # 猫眼评分
+    maoyan_score    decimal(3, 1)   not null default 0.0,
+
+    primary key (id, id_movie_douban),
+    index (name_zh),
+    index (zhihu_score desc),
+    index (zhihu_vote desc),
+    index (maoyan_score desc)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+# 知乎问题
+CREATE TABLE question_zhihu
+(
+    # https://www.zhihu.com/question/ + id
+    id             bigint unsigned not null primary key,
+    # 知乎电影ID
+    id_movie_zhihu bigint unsigned not null default 0,
+    # 知乎问题中文名
+    name_zh        varchar(255)    not null default '',
+    # 回答数 0:默认 1:文章
+    answer_num     int unsigned    not null default 0,
+
+    index (id_movie_zhihu),
+    index (name_zh),
+    index (answer_num desc)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+# 知乎 end ========================================================================================
+
 # 表初始化 start ========================================================================================
 
 
@@ -1364,7 +1411,7 @@ values (1, '未知'),
        (34, '戏曲'),
        (35, '鬼怪');
 
-
+/*
 # 测试数据
 insert into movie_imdb(id, start_year)
 values (23071, 1932),
@@ -1390,6 +1437,7 @@ insert into movie_douban(id, name_zh)
 values (27119724, '小丑'),
        (30242710, '他们已不再变老'),
        (26786669, '决战中途岛'),
+       (33415943, '我失去了身体'),
        (26794435, '哪吒之魔童降世'),
        (1292720, '阿甘正传'),
        (30362186, '大约在冬季');
@@ -1400,6 +1448,7 @@ values (1018983),
        (1036390),
        (1047979);
 
+*/
 
 # 表初始化 end ========================================================================================
 
@@ -1544,7 +1593,7 @@ alter table place_scene
     add foreign key (id_city_scene) references city_scene (id);
 
 alter table movie_netease
-    add foreign key (id_movie_douban) references movie_douban(id);
+    add foreign key (id_movie_douban) references movie_douban (id);
 alter table comment_netease
     add foreign key (id_song_netease) references song_netease (id);
 alter table comment_netease
@@ -1565,6 +1614,11 @@ alter table artist_netease_to_song_netease
     add foreign key (id_song_netease) references song_netease (id);
 alter table artist_netease_to_song_netease
     add foreign key (id_artist_netease) references artist_netease (id);
+
+alter table movie_zhihu
+    add foreign key (id_movie_douban) references movie_douban (id);
+alter table question_zhihu
+    add foreign key (id_movie_zhihu) references movie_zhihu (id);
 
 */
 

@@ -17,6 +17,9 @@ NEWSPIDER_MODULE = 'crawler.spiders'
 # 忽略 robots.txt rules
 ROBOTSTXT_OBEY = False
 
+# feed编码
+# FEED_EXPORT_ENCODING = 'utf-8'
+
 # 日志
 # LOG_FILE = 'log_{}.txt'.format(datetime.date.today())
 LOG_LEVEL = 'INFO'
