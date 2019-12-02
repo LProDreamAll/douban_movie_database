@@ -83,8 +83,8 @@ class ImageDoubanSpider(BaseSpider):
                 size = image.xpath('.//div[@class="prop"]/text()').get().split('x')
                 item_image['length'] = re.search('\d+', size[0]).group()
                 item_image['width'] = re.search('\d+', size[1]).group()
-                print('-----------------')
-                print(item_image)
+                # print('-----------------')
+                # print(item_image)
                 yield item_image
             self.logger.info('get douban image success,id:{},type:{}'.format(id, self.type))
         else:

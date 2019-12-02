@@ -20,7 +20,7 @@ URL_XL720 = 'https://www.xl720.com'
 URL_HAO6V = 'http://www.hao6v.com'
 
 # 狗带TV
-URL_GOUDAITV = 'http://www.goodaitv.com'
+URL_GOUDAITV = 'http://www.goudaitv.com'
 
 # 在线之家
 URL_ZXZJS = 'http://www.zxzjs.com'
@@ -113,10 +113,4 @@ HAO6V_TYPE_LIST = [
     'jilu',
 ]
 
-GOUDAITV_TYPE_LIST = [
-    'dianying',
-    'lianxuju',
-    'zongyi',
-    'dongman'
-]
 

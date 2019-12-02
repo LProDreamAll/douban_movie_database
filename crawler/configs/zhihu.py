@@ -8,8 +8,8 @@
 URL_SEARCH = 'https://www.zhihu.com/search?type=content&q='
 
 # 豆瓣电影已看人数限制
-# HAVE_SEEN_LIMIT = 1000
-HAVE_SEEN_LIMIT = 0
+HAVE_SEEN_LIMIT = 1000
+# HAVE_SEEN_LIMIT = 0
 
 # 知乎cookie文件路径
 # console模式

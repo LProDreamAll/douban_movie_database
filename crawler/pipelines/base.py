@@ -51,8 +51,7 @@ class BasePipeline(object):
         :param table: item_dict中的表名
         :return:
         """
-        # --------------------------------------------------
-        # warnings.filterwarnings("ignore")
+        warnings.filterwarnings("ignore")
         self.cursor.executemany(self.item_dict[table]['sql'], self.item_dict[table]['data'])
         self.conn.commit()
         self.item_dict[table]['data'].clear()

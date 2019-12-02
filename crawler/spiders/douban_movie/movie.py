@@ -109,8 +109,8 @@ class MovieDoubanSpider(BaseSpider):
                 if re.match('(\d+)人想看', see) is not None:
                     item_movie['wanna_see'] = re.search('(\d+)人想看', see).group(1)
             item_movie['update_date'] = self.today
-            print('--------------------------------------')
-            print(item_movie)
+            # print('--------------------------------------')
+            # print(item_movie)
             yield item_movie
 
             trailer_xp = response.xpath('//li[@class="label-trailer"]/a/@href').get()
@@ -131,8 +131,8 @@ class MovieDoubanSpider(BaseSpider):
                     item_alias = AliasMovieDouban()
                     item_alias['id_movie_douban'] = movie_id
                     item_alias['name_alias'] = alias.strip()
-                    print('--------------------------------------')
-                    print(item_alias)
+                    # print('--------------------------------------')
+                    # print(item_alias)
                     yield item_alias
             # 电影影人
             celebrity_list = info.xpath('.//span/a')
@@ -148,8 +148,8 @@ class MovieDoubanSpider(BaseSpider):
                     item_movie_to_celebrity['id_profession'] = 4
                     count += 1
                     item_movie_to_celebrity['sort'] = count
-                    print('celebrity --------------------------------------')
-                    print(item_movie_to_celebrity)
+                    # print('celebrity --------------------------------------')
+                    # print(item_movie_to_celebrity)
                     yield item_movie_to_celebrity
                     continue
                 # 导演
@@ -159,8 +159,8 @@ class MovieDoubanSpider(BaseSpider):
                 else:
                     item_movie_to_celebrity['id_profession'] = 3
                 item_movie_to_celebrity['sort'] = 0
-                print('celebrity --------------------------------------')
-                print(item_movie_to_celebrity)
+                # print('celebrity --------------------------------------')
+                # print(item_movie_to_celebrity)
                 yield item_movie_to_celebrity
             # 电影类型
             for type_name in type_list:
@@ -170,8 +170,8 @@ class MovieDoubanSpider(BaseSpider):
                     item_movie_to_type['id_type_movie'] = config.TYPE_MOVIE_LIST.index(type_name)
                 else:
                     continue
-                print('--------------------------------------')
-                print(item_movie_to_type)
+                # print('--------------------------------------')
+                # print(item_movie_to_type)
                 yield item_movie_to_type
             # 电影评分
             is_score = response.xpath('//div[@class="rating_sum"]/text()').get()
@@ -184,8 +184,8 @@ class MovieDoubanSpider(BaseSpider):
                 vote_list = score.xpath('.//span[@class="rating_per"]/text()').getall()
                 for index, vote in enumerate(vote_list):
                     item_score['score{}'.format(5 - index)] = re.search('(.*)%', vote).group(1)
-                print('--------------------------------------')
-                print(item_score)
+                # print('--------------------------------------')
+                # print(item_score)
                 yield item_score
             # 电影标签
             tag_list = response.xpath('//div[@class="tags-body"]/a/text()').getall()
@@ -193,8 +193,8 @@ class MovieDoubanSpider(BaseSpider):
                 item_tag_movie = TagMovie()
                 item_tag_movie['id_movie_douban'] = movie_id
                 item_tag_movie['name_zh'] = tag
-                print('--------------------------------------')
-                print(item_tag_movie)
+                # print('--------------------------------------')
+                # print(item_tag_movie)
             # 电影奖项
             award_list = response.xpath('//div[@class="mod"]/ul')
             for award in award_list:
@@ -214,8 +214,8 @@ class MovieDoubanSpider(BaseSpider):
                 item_movie_to_award['type_award'] = type_award.split('(提名)')[0]
                 item_movie_to_award['award_th'] = re.search('\d+', title).group()
                 item_movie_to_award['is_nominated'] = 0 if re.search('提名', type_award) else 1
-                print('--------------------------------------')
-                print(item_movie_to_award)
+                # print('--------------------------------------')
+                # print(item_movie_to_award)
                 yield item_movie_to_award
             # 电影影评
             review_list = response.xpath('//div[@class="main review-item"]')
@@ -246,8 +246,8 @@ class MovieDoubanSpider(BaseSpider):
                     item_review['content'] = ''.join(
                         review.xpath('.//div[@class="short-content"]/text()').getall()).strip().strip('()').strip()
                     yield item_review
-                    print('------------')
-                    print(item_review)
+                    # print('------------')
+                    # print(item_review)
                     item_user_review = UserDoubanToReviewMovieDouban()
                     item_user_review['id_user_douban'] = user_id
                     item_user_review['id_review_movie_douban'] = review_id
@@ -286,11 +286,12 @@ class MovieDoubanSpider(BaseSpider):
                     item_resource['name_zh'] = name_zh
                     item_resource['create_year'] = start_year
                     item_resource['name_origin'] = name_zh
-                    url_resource = resource.xpath('a/@href').get()
-                    item_resource['url_resource'] = re.search('https://www\.douban\.com/link2/\?url=(.*)',
-                                                              url_resource).group(1) if url_resource is not None else ''
-                    print('--------------------')
-                    print(item_resource)
+                    url_resource_xp = resource.xpath('a/@href').get()
+                    url_resource = re.search('https://www\.douban\.com/link2/\?url=(.*)',
+                                             url_resource_xp).group(1) if url_resource_xp is not None else ''
+                    item_resource['url_resource'] = 'd_{}'.format(url_resource)
+                    # print('--------------------')
+                    # print(item_resource)
                     yield item_resource
             self.logger.info('get douban movie success,id:{}'.format(movie_id))
         else:

@@ -45,8 +45,8 @@ class TrailerDoubanSpider(BaseSpider):
             trailer_url = json.loads(response.xpath('//script[@type="application/ld+json"]/text()').get())
             item_trailer['url_video'] = trailer_url['embedUrl']
             yield item_trailer
-            print('---------------------')
-            print(item_trailer)
+            # print('---------------------')
+            # print(item_trailer)
             self.logger.info('get douban trailer success,trailer_id:{}'.format(trailer_id))
         else:
             self.logger.warning('get douban trailer failed,trailer_id:{}'.format(trailer_id))

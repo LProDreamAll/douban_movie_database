@@ -51,8 +51,8 @@ class ImdbSpider(BaseSpider):
             item_movie['url_poster'] = content['Poster']
             item_movie['summary'] = content['Plot']
             yield item_movie
-            print('----------------')
-            print(item_movie)
+            # print('----------------')
+            # print(item_movie)
             item_rate = RateImdb()
             item_rate['id'] = imdb_id
             item_rate['imdb_score'] = content['imdbRating']
@@ -65,8 +65,8 @@ class ImdbSpider(BaseSpider):
                 elif rate['Source'] == 'Metacritic':
                     item_rate['mtc_score'] = int(re.match('(\d+)/100', rate['Value']).group(1)) / 10
             yield item_rate
-            print('-----------------')
-            print(item_rate)
+            # print('-----------------')
+            # print(item_rate)
             self.logger.info('get omdb\'s movie success,imdb_id:{}'.format(imdb_id))
         else:
             self.logger.warning('get omdb\'s movie failed,imdb_id:{}'.format(imdb_id))

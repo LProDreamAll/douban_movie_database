@@ -3,8 +3,9 @@
 
 # author: humingk
 # ----------------------
-import datetime
+import re
 import scrapy
+import datetime
 from crawler.configs import resource as config
 from crawler.spiders.base import BaseSpider
 
@@ -31,7 +32,7 @@ class ZxzjsResourceSpider(BaseSpider):
         }
     }
 
-    def __init__(self,  **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.type_new = 'new'
         self.start_year = datetime.datetime.now().year
@@ -55,8 +56,10 @@ class ZxzjsResourceSpider(BaseSpider):
         movie_list = response.xpath('//ul[@class="stui-vodlist clearfix"]/li/div[@class="stui-vodlist__box"]/a')
         if movie_list:
             for movie in movie_list:
-                url = movie.xpath('@href').get()
+                url_xp = movie.xpath('@href').get()
+                url_re = re.search('video/(.*)-1-1\.html', url_xp) if url_xp is not None else ''
                 name = movie.xpath('@title').get()
+
                 item_resource = ResourceMovie()
                 item_resource['id_movie_douban'] = 0
                 item_resource['id_movie_imdb'] = 0
@@ -64,11 +67,11 @@ class ZxzjsResourceSpider(BaseSpider):
                 item_resource['id_type_resource'] = 101
                 item_resource['name_zh'] = name
                 item_resource['create_year'] = year
-                item_resource['name_origin'] = name
-                item_resource['url_resource'] = '{}{}'.format(config.URL_ZXZJS, url)
+                item_resource['name_origin'] = ''
+                item_resource['url_resource'] = 'z_{}'.format(url_re.group(1)) if url_re != '' else ''
                 yield item_resource
-                print('-------------------------')
-                print(item_resource)
+                # print('-------------------------')
+                # print(item_resource)
             self.logger.info(
                 'get zxzjs\'s movie list success,type:{},page:{},year:{}'.format(type_id, page_id, year))
             # 爬虫结束 / 仅最新电影
@@ -77,16 +80,17 @@ class ZxzjsResourceSpider(BaseSpider):
                 return
             # 下一页
             next_page = response.xpath('//a[text()="下一页"]/@href').get()
-            if next_page is None:
-                next_year = year - 1
-                next_page = '/vodshow/{}-----------{}.html'.format(type_id, next_year)
-                next_page_id = 1
-            else:
-                next_year = year
+            next_year = re.search('--------(\d{1})---', next_page).group(1)
+            if int(next_year) == year:
                 next_page_id = page_id + 1
+                next_year_id = self.start_year
+            else:
+                next_year_id = year - 1
+                next_page = '/vodshow/{}-----------{}.html'.format(type_id, year)
+                next_page_id = 1
             yield scrapy.Request(url='{}{}'.format(config.URL_ZXZJS, next_page),
-                                 meta={'type_id': type_id, 'page_id': next_page_id, 'year': next_year},
+                                 meta={'type_id': type_id, 'page_id': next_page_id, 'year': next_year_id},
                                  callback=self.parse_movie_list)
         else:
-            self.logger.warning(
+            self.logger.error(
                 'get zxzjs\'s movie list failed,type:{},page:{},year:{}'.format(type_id, page_id, year))

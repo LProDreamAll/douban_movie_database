@@ -41,27 +41,8 @@ class SceneSpider(RedisSpider):
     }
 
     def start_requests(self):
-        yield scrapy.Request(url=config.URL_MOVIE_LIST + '11111', callback=self.parse)
-
-    def parse(self, response):
-        """
-        解析电影列表总数
-
-        :param response:
-        :return:
-        """
-        content = json.loads(response.text)
-        if content['data'] and content['data']['total']:
-            total = content['data']['total']
-            self.logger.info('prepare to get scene movie list , total:{}'.format(total))
-            # 请求电影列表的每一页
-            for page in range(int(total / config.NUM_MOVIE_LIST) + 1):
-                yield scrapy.Request(url='{}{}'.format(config.URL_MOVIE_LIST, page),
-                                     callback=self.parse_movie_list)
-                # ----------------------------------------------------------------------------------------
-                break
-        else:
-            self.logger.warning('get scene movie list failed')
+        yield scrapy.Request(url='{}{}'.format(config.URL_MOVIE_LIST, 0),
+                             meta={'page': 0}, callback=self.parse_movie_list)
 
     def parse_movie_list(self, response):
         """
@@ -70,29 +51,23 @@ class SceneSpider(RedisSpider):
         :param response:
         :return:
         """
+        page = response.meta['page']
         content = json.loads(response.text)
-        if content['data'] and content['data']['movies']:
-            # ----------------------------------------------------------------------------------------
-            count = 0
+        if 'data' in content and 'movies' in content['data'] and content['data']['movies']:
             for movie in content['data']['movies']:
                 # 请求电影列表中的电影
                 yield scrapy.Request(url='{}{}'.format(config.URL_MOVIE, movie['id']),
-                                     callback=self.parse_movie)
+                                     meta={'movie_id': movie['id']}, priority=3, callback=self.parse_movie)
                 for place in movie['placeIds']:
                     # 请求电影中的地点
                     yield scrapy.Request(url='{}{}'.format(config.URL_PLACE, place),
-                                         callback=self.parse_place)
-                # ----------------------------------------------------------------------------------------
-                count += 1
-                if count >= 10:
-                    break
-            self.logger.info(
-                'get scene movie list success ,page:{},total:{}'.format(response.url.split('=')[-1],
-                                                                        content['data']['total']))
+                                         meta={'place_id': place}, priority=2, callback=self.parse_place)
+            self.logger.info('get scene movie list success,page:{}'.format(page))
+            # 下一页
+            yield scrapy.Request(url='{}{}'.format(config.URL_MOVIE_LIST, page + 1),
+                                 meta={'page': page + 1}, priority=1, callback=self.parse_movie_list)
         else:
-            self.logger.warning(
-                'get scene movie list failed ,page:{},total:{}'.format(response.url.split('=')[-1],
-                                                                       content['data']['total']))
+            self.logger.error('get scene movie list failed,page:{}'.format(page))
 
     def parse_movie(self, response):
         """
@@ -101,8 +76,9 @@ class SceneSpider(RedisSpider):
         :param response:
         :return:
         """
+        movie_id = response.meta['movie_id']
         content = json.loads(response.text)
-        if content['data'] and content['data']['movie']:
+        if 'data' in content and 'movie' in content['data']:
             data = content['data']['movie']
             item_movie = MovieScene()
             item_movie['id'] = data['id']
@@ -111,21 +87,23 @@ class SceneSpider(RedisSpider):
             item_movie['start_year'] = data['year']
             item_movie['description'] = data['overview']
             item_movie['url_map'] = data['staticMapUrl']
-            print('----------------------------------')
-            print(item_movie)
+            # print('----------------------------------')
+            # print(item_movie)
             yield item_movie
             # 场景
-            for plot in data['plots']:
-                item_scene = Scene()
-                item_scene['id'] = plot['sceneId']
-                item_scene['id_movie_scene'] = item_movie['id']
-                item_scene['id_place_scene'] = plot['placeId']
-                item_scene['name_zh'] = plot['sceneName']
-                item_scene['happen_time'] = plot['position']
-                yield item_scene
-            self.logger.info('get scene movie success, id:{},name:{}'.format(item_movie['id'], item_movie['name_zh']))
+            if data['plots']:
+                for plot in data['plots']:
+                    item_scene = Scene()
+                    item_scene['id'] = plot['sceneId']
+                    item_scene['id_movie_scene'] = item_movie['id']
+                    item_scene['id_place_scene'] = plot['placeId']
+                    item_scene['name_zh'] = plot['sceneName']
+                    item_scene['happen_time'] = plot['position']
+                    yield item_scene
+            self.logger.info(
+                'get scene movie success,movie_id:{},movie_name:{}'.format(item_movie['id'], item_movie['name_zh']))
         else:
-            self.logger.warning('get scene movie failed,possible id：{}'.format(response.url.split('/')[-1]))
+            self.logger.error('get scene movie failed,movie_id:{}'.format(movie_id))
 
     def parse_place(self, response):
         """
@@ -134,8 +112,9 @@ class SceneSpider(RedisSpider):
         :param response:
         :return:
         """
+        place_id = response.meta['place_id']
         content = json.loads(response.text)
-        if content['data'] and content['data']['place']:
+        if 'data' in content and 'place' in content['data']:
             data = content['data']['place']
             item_place = PlaceScene()
             item_place['id'] = data['id']
@@ -161,46 +140,48 @@ class SceneSpider(RedisSpider):
             item_place['url_map'] = data['staticMapUrl']
             yield item_place
             # 场景详情
-            for scene in data['scenes']:
-                for detail in scene['details']:
-                    item_scene_detail = SceneDetail()
-                    item_scene_detail['id'] = detail['id']
-                    item_scene_detail['id_scene'] = detail['sceneId']
-                    item_scene_detail['id_movie_scene'] = scene['movieId']
-                    item_scene_detail['happen_time'] = detail['position']
-                    item_scene_detail['description'] = detail['description']
-                    yield item_scene_detail
-                    # 场景详情的人物
-                    if detail['persons']:
-                        for person in detail['persons']:
-                            item_celebrity = CelebrityScene()
-                            item_celebrity['id'] = person['id']
-                            item_celebrity['name_zh'] = person['cname']
-                            item_celebrity['name_en'] = person['ename']
-                            yield item_celebrity
-                            # 场景电影-人物 对应关系
-                            item_movie_to_celebrity = MovieSceneToCelebrityScene()
-                            item_movie_to_celebrity['id_movie_scene'] = scene['movieId']
-                            item_movie_to_celebrity['id_celebrity_scene'] = item_celebrity['id']
-                            yield item_movie_to_celebrity
-                            # 场景详情-人物 对应关系
-                            item_celebrity_to_scene_detail = SceneDetailToCelebrityScene()
-                            item_celebrity_to_scene_detail['id_celebrity_scene'] = item_celebrity['id']
-                            item_celebrity_to_scene_detail['id_scene_detail'] = item_scene_detail['id']
-                            yield item_celebrity_to_scene_detail
-                    # 场景详情的剧照图
-                    for still in detail['stills']:
-                        item_image_scene_detail = ImageSceneDetail()
-                        item_image_scene_detail['id_scene_detail'] = item_scene_detail['id']
-                        item_image_scene_detail['url_image'] = still['picPath']
-                        yield item_image_scene_detail
+            if 'scenes' in data:
+                for scene in data['scenes']:
+                    if scene['details']:
+                        for detail in scene['details']:
+                            item_scene_detail = SceneDetail()
+                            item_scene_detail['id'] = detail['id']
+                            item_scene_detail['id_scene'] = detail['sceneId']
+                            item_scene_detail['id_movie_scene'] = scene['movieId']
+                            item_scene_detail['happen_time'] = detail['position']
+                            item_scene_detail['description'] = detail['description']
+                            yield item_scene_detail
+                            # 场景详情的人物
+                            if detail['persons']:
+                                for person in detail['persons']:
+                                    item_celebrity = CelebrityScene()
+                                    item_celebrity['id'] = person['id']
+                                    item_celebrity['name_zh'] = person['cname']
+                                    item_celebrity['name_en'] = person['ename']
+                                    yield item_celebrity
+                                    # 场景电影-人物 对应关系
+                                    item_movie_to_celebrity = MovieSceneToCelebrityScene()
+                                    item_movie_to_celebrity['id_movie_scene'] = scene['movieId']
+                                    item_movie_to_celebrity['id_celebrity_scene'] = item_celebrity['id']
+                                    yield item_movie_to_celebrity
+                                    # 场景详情-人物 对应关系
+                                    item_celebrity_to_scene_detail = SceneDetailToCelebrityScene()
+                                    item_celebrity_to_scene_detail['id_celebrity_scene'] = item_celebrity['id']
+                                    item_celebrity_to_scene_detail['id_scene_detail'] = item_scene_detail['id']
+                                    yield item_celebrity_to_scene_detail
+                            # 场景详情的剧照图
+                            for still in detail['stills']:
+                                item_image_scene_detail = ImageSceneDetail()
+                                item_image_scene_detail['id_scene_detail'] = item_scene_detail['id']
+                                item_image_scene_detail['url_image'] = still['picPath']
+                                yield item_image_scene_detail
 
             # 地点实景图
             for pic in data['realGraphics']:
                 item_image_place = ImagePlaceScene()
                 item_image_place['id_place_scene'] = item_place['id']
                 item_image_place['url_image'] = pic['picPath']
-                item_image_place['description'] = pic['description']
+                item_image_place['description'] = pic['description'] if pic['description'] is not None else ''
                 yield item_image_place
             # 地点类型
             for type in data['categories']:
@@ -229,6 +210,7 @@ class SceneSpider(RedisSpider):
             item_city['name_zh'] = data['level3Cname']
             item_city['name_en'] = data['level3Ename']
             yield item_city
-            self.logger.info('get scene place success, id:{},name:{}'.format(item_place['id'], item_place['name_zh']))
+            self.logger.info(
+                'get scene place success,place_id:{},place_name:{}'.format(item_place['id'], item_place['name_zh']))
         else:
-            self.logger.warning('get scene place failed,possible id：{}'.format(response.url.split('/')[-1]))
+            self.logger.error('get scene place failed,palce_id:{}'.format(place_id))

@@ -31,7 +31,7 @@ class LoldyttResourceSpider(BaseSpider):
         }
     }
 
-    def __init__(self,  **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.type_new = 'new'
         # 仅爬取最新电影的页数 (每种类型)
@@ -51,6 +51,7 @@ class LoldyttResourceSpider(BaseSpider):
             for movie in movie_list:
                 yield scrapy.Request(url=movie,
                                      meta={'movie_id': movie.split('/')[4]},
+                                     priority=2,
                                      callback=self.parse_movie)
             self.logger.info(
                 'get loldytt\'s movie list success,type:{},page:{}'.format(type, page_id))
@@ -60,6 +61,7 @@ class LoldyttResourceSpider(BaseSpider):
             # 下一页
             yield scrapy.Request(url='{}/{}/chart/{}.html'.format(config.URL_LOLDYTT, type, page_id + 1),
                                  meta={'type': type, 'page_id': page_id + 1},
+                                 priority=1,
                                  callback=self.parse_movie_list)
         else:
             self.logger.warning(
@@ -76,7 +78,7 @@ class LoldyttResourceSpider(BaseSpider):
                 description = response.xpath('//*[@id="juqing"]//text()').getall()
                 flag_year = False
                 flag_imdb = False
-                create_year = 0000
+                create_year = 0
                 imdb_id = 0
                 for detail in description:
                     if flag_year and flag_imdb:
@@ -99,8 +101,8 @@ class LoldyttResourceSpider(BaseSpider):
                 item_resource['name_origin'] = name_origin
                 item_resource['url_resource'] = url
                 yield item_resource
-                print('-------------------------')
-                print(item_resource)
-            self.logger.info('get loldytt\'s movie success,movie_id:{},movie_name:{}'.format(movie_id, title))
+                # print('-------------------------')
+                # print(item_resource)
+            self.logger.info('get loldytt movie success,movie_id:{},movie_name:{}'.format(movie_id, title))
         else:
-            self.logger.warning('get loldytt\'s movie failed,movie_id:{}'.format(movie_id))
+            self.logger.error('get loldytt movie failed,movie_id:{}'.format(movie_id))

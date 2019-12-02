@@ -40,14 +40,14 @@ class SearchDoubanPipeline(BasePipeline):
                        'id_celebrity_douban=values(id_celebrity_douban) '
             },
             'MovieImdb': {
-                'sql': 'insert into movie_imdb(id,is_douban_updated) values (%s,%s) '
+                'sql': 'insert into movie_imdb(id,id_movie_douban) values (%s,%s) '
                        'on duplicate key update '
-                       'is_douban_updated=values(is_douban_updated) '
+                       'id_movie_douban=values(id_movie_douban) '
             },
             'CelebrityImdb': {
-                'sql': 'insert into celebrity_imdb(id,is_douban_updated) values (%s,%s) '
+                'sql': 'insert into celebrity_imdb(id,id_celebrity_douban) values (%s,%s) '
                        'on duplicate key update '
-                       'is_douban_updated=values(is_douban_updated) '
+                       'id_celebrity_douban=values(id_celebrity_douban) '
             },
         }
         # 每个表添加data列表

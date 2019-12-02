@@ -40,7 +40,7 @@ class Dy2018ResourceSpider(BaseSpider):
     def start_requests(self):
         for type_id in range(0, 20, 1):
             yield scrapy.Request(url='{}/{}/'.format(config.URL_DY2018, type_id),
-                                 meta={'type_id': 0, 'page_id': 1}, callback=self.parse_movie_list)
+                                 meta={'type_id': type_id, 'page_id': 1}, callback=self.parse_movie_list)
 
     def parse_movie_list(self, response):
         type_id = response.meta['type_id']
@@ -51,23 +51,23 @@ class Dy2018ResourceSpider(BaseSpider):
             for movie in movie_list:
                 yield scrapy.Request(url='{}{}'.format(config.URL_DY2018, movie),
                                      meta={'movie_id': re.search('\d+', movie).group()},
-                                     callback=self.parse_movie)
-            self.logger.info('get dy2018\'s movie list success,type:{},page:{}'.format(type_id, page_id))
+                                     priority=2, callback=self.parse_movie)
+            self.logger.info('get dy2018 movie list success,type:{},page:{}'.format(type_id, page_id))
             # 仅最新电影
             if self.type == self.type_new and page_id > self.new_max_pages:
                 return
             # 下一页
             yield scrapy.Request(url='{}/{}/index_{}.html'.format(config.URL_DY2018, type_id, page_id + 1),
-                                 meta={'type_id': type_id, 'page_id': page_id + 1},
+                                 meta={'type_id': type_id, 'page_id': page_id + 1}, priority=1,
                                  callback=self.parse_movie_list)
         else:
-            self.logger.warning('get dy2018\'s movie list failed,type:{},page:{}'.format(type_id, page_id))
+            self.logger.error('get dy2018 movie list failed,type:{},page:{}'.format(type_id, page_id))
 
     def parse_movie(self, response):
         movie_id = response.meta['movie_id']
         title = response.xpath('//h1/text()').get()
-        name = re.search('《(.*)》', title).group(1) if title is not None else ''
-        if title is not None:
+        if title:
+            name = re.search('《(.*)》', title).group(1) if title is not None else ''
             online_list = response.xpath('//div[@class="player_list"]//a/@href').getall()
             offline_list = response.xpath('//td[@style]/a/@href').getall()
             for url in online_list + offline_list:
@@ -77,19 +77,24 @@ class Dy2018ResourceSpider(BaseSpider):
                 item_resource['id_website_resource'] = 101
                 item_resource['id_type_resource'] = 101 if config.URL_DY2018 in url else 100
                 item_resource['name_zh'] = name
-                year_maybe = response.xpath('//div[@id="Zoom"]/text()').getall()
-                for index, year in enumerate(year_maybe):
+                create_year = 0
+                year_xp = response.xpath('//div[@id="Zoom"]/text()').getall()
+                for index, year in enumerate(year_xp):
                     if index > 5:
                         break
-                    create_year = re.search('年　　代　(\d+)', year)
-                    if create_year is not None:
-                        item_resource['create_year'] = create_year.group(1)
+                    year_re = re.search('年　　代　(\d+)', year)
+                    if year_re is not None:
+                        create_year = year_re.group(1)
                         break
+                item_resource['create_year'] = create_year
                 item_resource['name_origin'] = title
                 item_resource['url_resource'] = url
+                if item_resource['id_type_resource'] == 101:
+                    item_resource['url_resource'] = 't_{}'.format(
+                        re.search('id=https://(.*)/index\.m3u8', url).group(1))
                 yield item_resource
-                print('-------------------------')
-                print(item_resource)
-            self.logger.info('get dy2018\'s movie success,movie_id:{},movie_name:{}'.format(movie_id, name))
+                # print('-------------------------')
+                # print(item_resource)
+            self.logger.info('get dy2018 movie success,movie_id:{},movie_name:{}'.format(movie_id, name))
         else:
-            self.logger.warning('get dy2018\'s movie failed,movie_id:{}'.format(movie_id))
+            self.logger.error('get dy2018 movie failed,movie_id:{}'.format(movie_id))

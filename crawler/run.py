@@ -3,7 +3,7 @@
 
 # author: humingk
 # ----------------------
-
+import argparse
 from scrapy import cmdline
 
 spiders = {
@@ -63,6 +63,9 @@ spiders = {
     61: 'search_douban -a type=movie_resource',
 
 }
+parser = argparse.ArgumentParser()
+parser.add_argument('id', type=int)
+args = parser.parse_args()
 cmdline.execute('scrapy crawl {}'.format(spiders.get(
-    26
+    args.id
 )).split())

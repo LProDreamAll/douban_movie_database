@@ -41,8 +41,8 @@ class NewDoubanSpider(BaseSpider):
                 item_movie['id'] = movie['id']
                 item_movie['name_zh'] = movie['title']
                 yield item_movie
-                print('--------------')
-                print(item_movie)
+                # print('--------------')
+                # print(item_movie)
             self.logger.info('get douban new success,now_num:{}'.format(num))
         else:
             self.logger.warning('get douban new failed,now_num:{}'.format(num))

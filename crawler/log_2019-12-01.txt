@@ -1,0 +1,6 @@
+2019-12-01 20:34:28 [search_douban] WARNING: get search list failed,id:135,type:movie_imdb
+2019-12-01 20:34:29 [search_douban] WARNING: get search list failed,id:136,type:movie_imdb
+2019-12-01 20:34:32 [search_douban] WARNING: get search list failed,id:138,type:movie_imdb
+2019-12-01 20:34:33 [search_douban] WARNING: get search list failed,id:139,type:movie_imdb
+2019-12-01 20:34:36 [search_douban] WARNING: get search list failed,id:142,type:movie_imdb
+2019-12-01 20:34:41 [search_douban] WARNING: get search list failed,id:145,type:movie_imdb

@@ -77,8 +77,8 @@ class SearchNeteaseSpider(BaseSpider):
                         item_song['id'] = song['id']
                         item_song['name_zh'] = song['name']
                         yield item_song
-                        print('song ---------------')
-                        print(item_song)
+                        # print('song ---------------')
+                        # print(item_song)
                         for artist in song['artists']:
                             item_artist = ArtistNetease()
                             item_artist['id'] = artist['id']
@@ -107,8 +107,8 @@ class SearchNeteaseSpider(BaseSpider):
                         item_playlist['url_cover'] = playlist['coverImgUrl']
                         item_playlist['description'] = playlist['description']
                         yield item_playlist
-                        print('playlist ---------------')
-                        print(item_playlist)
+                        # print('playlist ---------------')
+                        # print(item_playlist)
                         item_movie = MovieNetease()
                         item_movie['id_movie_douban'] = movie_id
                         item_movie['id_netease'] = playlist['id']
@@ -125,8 +125,8 @@ class SearchNeteaseSpider(BaseSpider):
                         url_cover = re.search('net/(.*)', album['picUrl']) if album['picUrl'] is not None else ''
                         item_album['url_cover'] = url_cover.group(1) if url_cover != '' else ''
                         yield item_album
-                        print('album ----------------')
-                        print(item_album)
+                        # print('album ----------------')
+                        # print(item_album)
                         item_artist = ArtistNetease()
                         item_artist['id'] = album['artist']['id']
                         item_artist['name_zh'] = album['artist']['name']

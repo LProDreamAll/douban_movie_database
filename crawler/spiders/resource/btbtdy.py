@@ -49,25 +49,27 @@ class BtbtdyResourceSpider(BaseSpider):
             for movie in movie_list:
                 url = movie.xpath('p[@class="title"]/a/@href').get()
                 title = movie.xpath('p[@class="title"]/a/@title').get()
-                year_text = movie.xpath('p[@class="des"]/text()').get()
-                year = re.search('\d+', year_text).group() if year_text is not None else 0000
+                year = 0
+                year_xp = movie.xpath('p[@class="des"]/text()').get()
+                year_re = re.search('\d+', year_xp) if year_xp is not None else None
+                if year_re:
+                    year = year_re.group()
                 if url is not None:
                     movie_id = re.search('\d+', url).group()
                     yield scrapy.Request(url='{}/vidlist/{}.html'.format(config.URL_BTBTDY, movie_id),
                                          meta={'movie_id': movie_id, 'title': title, 'year': year},
-                                         callback=self.parse_movie)
-            self.logger.info(
-                'get btbtdy\'s movie list success,page:{}'.format(page_id))
+                                         priority=2, callback=self.parse_movie)
+            self.logger.info('get btbtdy movie list success,page:{}'.format(page_id))
             # 仅最新电影
             if self.type == self.type_new and page_id > self.new_max_pages:
                 return
             # 下一页
-            yield scrapy.Request(url='{}/screen/0-----time-{}.html'.format(config.URL_LOLDYTT, page_id + 1),
-                                 meta={'page_id': page_id + 1},
-                                 callback=self.parse_movie_list)
+            for next in (page_id + 1, page_id + 2):
+                yield scrapy.Request(url='{}/screen/0-----time-{}.html'.format(config.URL_BTBTDY, next),
+                                     meta={'page_id': next}, priority=1,
+                                     callback=self.parse_movie_list)
         else:
-            self.logger.warning(
-                'get btbtdy\'s movie list failed,page:{}'.format(page_id))
+            self.logger.error('get btbtdy movie list failed,page:{}'.format(page_id))
 
     def parse_movie(self, response):
         movie_id = response.meta['movie_id']
@@ -82,7 +84,7 @@ class BtbtdyResourceSpider(BaseSpider):
                     # 在线资源
                     if type_id == 101:
                         name_origin = resource.xpath('a/text()').get()
-                        url = '{}{}'.format(config.URL_BTBTDY, resource.xpath('a/@href').get())
+                        url = 'b_{}'.format(re.search('/play/(.*)\.html', resource.xpath('a/@href').get()).group(1))
                     # 网盘资源
                     elif type_id == 102:
                         name_origin = resource.xpath('span/text()').get()
@@ -99,10 +101,10 @@ class BtbtdyResourceSpider(BaseSpider):
                     item_resource['name_zh'] = title
                     item_resource['create_year'] = year
                     item_resource['name_origin'] = name_origin if name_origin is not None else ''
-                    item_resource['url_resource'] = url if url is not None else ''
+                    item_resource['url_resource'] = url
                     yield item_resource
-                    print('-------------------------')
-                    print(item_resource)
-            self.logger.info('get btbtdy\'s movie success,movie_id:{},movie_name:{}'.format(movie_id, title))
+                    # print('-------------------------')
+                    # print(item_resource)
+            self.logger.info('get btbtdy movie success,movie_id:{},movie_name:{}'.format(movie_id, title))
         else:
-            self.logger.info('get btbtdy\'s movie failed,movie_id:{},movie_name:{}'.format(movie_id, title))
+            self.logger.error('get btbtdy movie failed,movie_id:{},movie_name:{}'.format(movie_id, title))

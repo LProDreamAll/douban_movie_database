@@ -74,7 +74,7 @@ class CelebrityDoubanSpider(BaseSpider):
                 summary_list = summary_body.xpath('text()').getall()
                 item_celebrity['summary'] = ''.join(summary_list)
             item_celebrity['update_date'] = self.today
-            print(item_celebrity)
+            # print(item_celebrity)
             yield item_celebrity
             # 奖项
             award_list = response.xpath('//ul[@class="award"]')
@@ -86,8 +86,8 @@ class CelebrityDoubanSpider(BaseSpider):
                 item_award = AwardMovie()
                 item_award['id'] = id_award
                 item_award['name_zh'] = re.search('第\d+届(.*)', title).group(1)
-                print('---------------------')
-                print(item_award)
+                # print('---------------------')
+                # print(item_award)
                 yield item_award
                 item_movie_to_award = MovieDoubanToAwardMovie()
                 item_movie_to_award['id_movie_douban'] = re.search(
@@ -97,8 +97,8 @@ class CelebrityDoubanSpider(BaseSpider):
                 item_movie_to_award['type_award'] = type_award.split('(提名)')[0]
                 item_movie_to_award['award_th'] = re.search('\d+', title).group()
                 item_movie_to_award['is_nominated'] = 0 if re.search('提名', type_award) else 1
-                print('---------------------------')
-                print(item_movie_to_award)
+                # print('---------------------------')
+                # print(item_movie_to_award)
                 yield item_movie_to_award
             # 影人别名
             alias_zh = info.xpath('ul/li/span[text()="更多外文名"]/../text()[2]').get()
@@ -113,8 +113,8 @@ class CelebrityDoubanSpider(BaseSpider):
                 item_alias['is_nikename'] = 0
                 if re.search('昵称', alias) is not None:
                     item_alias['is_nikename'] = 1
-                print('----------------')
-                print(item_alias)
+                # print('----------------')
+                # print(item_alias)
                 yield item_alias
             self.logger.info('get douban celebrity success,id:{}'.format(celebrity_id))
         else:

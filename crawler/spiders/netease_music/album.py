@@ -60,8 +60,8 @@ class AlbumNeteaseSpider(BaseSpider):
                 item_song['id'] = song['id']
                 item_song['name_zh'] = song['name']
                 yield item_song
-                print('---------')
-                print(item_song)
+                # print('---------')
+                # print(item_song)
                 for artist in song['ar']:
                     item_artist = ArtistNetease()
                     item_artist['id'] = artist['id']

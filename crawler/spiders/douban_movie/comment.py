@@ -50,8 +50,8 @@ class CommentDoubanSpider(BaseSpider):
                 user_id = comment.xpath('.//span[@class="comment-info"]/a/@href').get().split('/')[4]
                 item_user['id'] = user_id
                 item_user['name_zh'] = comment.xpath('.//span[@class="comment-info"]/a/text()').get()
-                print('--------------')
-                print(item_user)
+                # print('--------------')
+                # print(item_user)
                 yield item_user
 
                 item_comment = CommentMovieDouban()
@@ -63,8 +63,8 @@ class CommentDoubanSpider(BaseSpider):
                 item_comment['create_date'] = int(
                     time.mktime(time.strptime(create, '%Y-%m-%d'))) if create is not None else 0
                 item_comment['content'] = comment.xpath('.//span[@class="short"]/text()').get()
-                print('-------------------------')
-                print(item_comment)
+                # print('-------------------------')
+                # print(item_comment)
                 yield item_comment
 
                 score_xp = comment.xpath('//span[@class="comment-info"]/span[2]/@class').get()

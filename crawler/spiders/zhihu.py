@@ -99,8 +99,8 @@ class MovieZhihuSpider(BaseSpider):
                 item_movie['zhihu_vote'] = vote
                 item_movie['maoyan_score'] = maoyan_score
                 yield item_movie
-                print('topic ---------------')
-                print(item_movie)
+                # print('topic ---------------')
+                # print(item_movie)
                 # 影片评价、评论
                 essence_list = response.xpath('//li[@class="WikiBoxEssenceContent-ItemWrapper"]')
                 if essence_list:
@@ -115,8 +115,8 @@ class MovieZhihuSpider(BaseSpider):
                         item_question['name_zh'] = essence.xpath('a').xpath('string(.)').get()
                         item_question['answer_num'] = answer_re.group() if answer_re != '' else 0
                         yield item_question
-                        print('essence -----------')
-                        print(item_question)
+                        # print('essence -----------')
+                        # print(item_question)
                 # 文章 / 问题
                 article_list = response.xpath('//div[@class="ContentItem ArticleItem"]')
                 question_list = response.xpath('//div[@class="ContentItem AnswerItem"]')
@@ -134,8 +134,8 @@ class MovieZhihuSpider(BaseSpider):
                     else:
                         item_question['answer_num'] = 0
                     yield item_question
-                    print('article or question -----------')
-                    print(item_question)
+                    # print('article or question -----------')
+                    # print(item_question)
                 self.logger.info('get zhihu search success,movie_id:{},movie_name:{}'.format(movie_id, movie_name))
             else:
                 item_movie = MovieZhihu()
@@ -146,6 +146,6 @@ class MovieZhihuSpider(BaseSpider):
                 item_movie['zhihu_vote'] = 0
                 item_movie['maoyan_score'] = 0.0
                 yield item_movie
-                self.logger.info('get zhihu search None,movie_id:{},movie_name:{}'.format(movie_id, movie_name))
+                self.logger.warning('get zhihu search None,movie_id:{},movie_name:{}'.format(movie_id, movie_name))
         else:
-            self.logger.warning('get zhihu search failed,movie_id:{},movie_name:{}'.format(movie_id, movie_name))
+            self.logger.error('get zhihu search failed,movie_id:{},movie_name:{}'.format(movie_id, movie_name))

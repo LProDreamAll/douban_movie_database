@@ -69,14 +69,14 @@ class CommentNeteaseSpider(BaseSpider):
                     item_comment['content'] = comment['content']
                     item_comment['agree_vote'] = comment['likedCount']
                     yield item_comment
-                    print('------------')
-                    print(item_comment)
+                    # print('------------')
+                    # print(item_comment)
                     item_user = UserNetease()
                     item_user['id'] = comment['user']['userId']
                     item_user['name_zh'] = comment['user']['nickname']
                     yield item_user
-                    print('-----------')
-                    print(item_user)
+                    # print('-----------')
+                    # print(item_user)
                 self.logger.info('get netease hot comment success,movie_id:{}'.format(song_id))
             # 获取结果为空,此歌暂无热门评论,标记为已搜索
             else:

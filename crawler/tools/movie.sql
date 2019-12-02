@@ -97,26 +97,27 @@ create table type_movie
 # IMDB电影 
 create table movie_imdb
 (
-    id                bigint unsigned      not null primary key,
+    id              bigint unsigned      not null primary key,
+    # 豆瓣电影ID 0:未更新 1：已更新但无对应豆瓣电影
+    id_movie_douban bigint unsigned      not null default 0,
     # 影片种类/类型  (电影、电视剧、电视剧的单集...)
-    id_type_video     tinyint unsigned     not null default 1,
+    id_type_video   tinyint unsigned     not null default 1,
     # IMDB电影英文名
-    name_en           varchar(255)         not null default '',
+    name_en         varchar(255)         not null default '',
     # IMDB电影发行年份 、 电视剧首集播放年份
-    start_year        smallint(4) unsigned not null default 0,
+    start_year      smallint(4) unsigned not null default 0,
     # 是否是成人电影 0-不是 1-是
-    is_adult          tinyint(1)           not null default 0,
+    is_adult        tinyint(1)           not null default 0,
     # IMDB电影原始名
-    name_origin       varchar(255)         not null default '',
+    name_origin     varchar(255)         not null default '',
     # IMDB电影片长 分钟
-    runtime           smallint unsigned    not null default 0,
+    runtime         smallint unsigned    not null default 0,
     # imdb海报 https://m.media-amazon.com/images/M/ + url
-    url_poster        varchar(1000)        not null default '',
+    url_poster      varchar(1000)        not null default '',
     # 简介
-    summary           text,
-    # 是否更新豆瓣电影 0:未更新 1:已更新
-    is_douban_updated tinyint(1)           not null default 0,
+    summary         text,
 
+    index (id_movie_douban),
     index (id_type_video),
     index (name_en),
     index (start_year desc),
@@ -170,7 +171,7 @@ create table movie_douban
     id            bigint unsigned      not null primary key,
     # 影片种类/类型-ID  (电影、电视剧、电视剧的单集...)
     id_type_video tinyint unsigned     not null default 1,
-    # 豆瓣电影的IMDB-ID
+    # 豆瓣电影的IMDB-ID 0：未匹配 1：没有对应的IMDB电影
     id_movie_imdb bigint unsigned      not null default 0,
     # 上映时间
     start_year    smallint(4) unsigned not null default 0,
@@ -401,14 +402,15 @@ create table profession
 create table celebrity_imdb
 (
     # nm+id,id至少7个数字（不够7个在id前面添0）
-    id                bigint unsigned      not null primary key,
+    id                  bigint unsigned      not null primary key,
+    # 豆瓣影人ID 0:未更新 1:已更新但无对应豆瓣影人
+    id_celebrity_douban bigint unsigned      not null default 0,
     # 英文名
-    name_en           varchar(255)         not null default '',
+    name_en             varchar(255)         not null default '',
     # 出生年份
-    birth_year        smallint(4) unsigned not null default 0,
-    # 是否更新豆瓣影人 0:未更新 1:已更新
-    is_douban_updated tinyint(1)           not null default 0,
+    birth_year          smallint(4) unsigned not null default 0,
 
+    index (id_celebrity_douban),
     index (name_en)
 ) ENGINE = InnoDB
   default charset = utf8mb4;
@@ -437,7 +439,7 @@ create table movie_imdb_to_celebrity_imdb
 create table celebrity_douban
 (
     id                bigint unsigned not null primary key,
-    # IMDB-ID
+    # IMDB-ID 0：未匹配 1：没有对应的IMDB影人
     id_celebrity_imdb bigint unsigned not null default 0,
     # 中文名
     name_zh           varchar(255)    not null default '',
@@ -797,7 +799,18 @@ create table resource_movie
     create_year         smallint(4)       not null default 0,
     # 资源原始名
     name_origin         varchar(255)      not null default '',
-    # 资源链接 id_website < 100 则url前缀拼接 https://www.douban.com/link2/?url=
+    # 资源链接
+    /*
+     id_type = 101 and
+        id_website < 100        https://www.douban.com/link2/?url= + {d_} url
+        id_website = 107        http://www.zxzjs.com/video/ + {z_} 2563 + -1-1.html
+                                name_origin = name_zh
+        id_website = 106        http://www.goudaitv.com/vodplay/ + {g_} 123729 + -1-1.html
+        id_website = 105        https://www.66s.cc/ + {v_} xijupian/12348 + .html
+        id_website = 101        https://www.dy2018.com/player/index.php?id=https:// + {t_} mu.qqxy100.com/ts/2/36629394919260160 + /index.m3u8
+        id_website = 103        http://www.btbtdy.me/play/ + {b_} 16943-0-0 + .html
+
+     */
     url_resource        varchar(1000)     not null default '',
 
 
@@ -1458,6 +1471,8 @@ values (1018983),
 /*
 
 alter table movie_imdb
+    add foreign key (id_movie_douban) references movie_douban (id);
+alter table movie_imdb
     add foreign key (id_type_video) references type_video (id);
 alter table movie_imdb_to_type_movie
     add foreign key (id_movie_imdb) references movie_imdb (id);
@@ -1503,6 +1518,9 @@ alter table movie_imdb_to_celebrity_imdb
     add foreign key (id_celebrity_imdb) references celebrity_imdb (id);
 alter table movie_imdb_to_celebrity_imdb
     add foreign key (id_profession) references profession (id);
+
+alter table celebrity_imdb
+    add foreign key (id_celebrity_douban) references celebrity_douban (id);
 alter table celebrity_douban
     add foreign key (id_celebrity_imdb) references celebrity_imdb (id);
 alter table alias_celebrity_douban
@@ -1627,47 +1645,39 @@ alter table question_zhihu
 # IMDB转换 end ========================================================================================
 
 /*
- # 人物
- insert into celebrity_imdb(id,name_en,birth_year,death_year)
-select nconst,primaryName,ifnull(birthYear,0),ifnull(deathYear,0)
-from name_basics;
 
-
- # 电影
- insert into type_video(name_en)
-select titleType from title_basics where titleType!='episode' group by titleType;
-
-insert into movie_imdb(id,id_type_video,start_year,is_adult,name_en,name_origin,runtime)
-select tconst,
-(select id from type_video where name_en=titleType),
-ifnull(startYear,0),isAdult,
-if(isnull(primaryTitle)=0 and char_length(primaryTitle)<255,primaryTitle,''),
-if(isnull(originalTitle)=0 and char_length(originalTitle)<255,originalTitle,''),
-if(isnull(runtimeMinutes)=0 and runtimeMinutes<60000,runtimeMinutes,0)
-from title_basics where titleType!='episode';
-
-
- # 评分
- insert into rate_imdb(id,imdb_score,imdb_vote)
-select tconst,averageRating,numVotes
-from title_ratings where title_ratings.tconst in (select id from movie_imdb);
-
-
- # 电影-人物
- insert into profession(name_en,id)
-select category,count(*)%199  from title_principals group by category;
-
-insert into movie_imdb_to_celebrity_imdb(id_movie_imdb,id_celebrity_imdb,id_profession,description)
-select tconst,nconst,
-(select id from profession where name_en=category),
-ifnull(job,'')
-from title_principals inner join movie_imdb on id=tconst
-on duplicate key update id_movie_imdb=tconst;
-
+ # https://humingk.github.io/mysql-imdb/
 
  # 豆瓣电影1.0中的movie表中的ID转换到2.0的movie_douban表中
 
+ # celebrity -> celebrity_imdb
 
+ update movie.celebrity_imdb i,douban_movie.actor d
+ set i.id_celebrity_douban=d.actor_id
+ where d.imdb_id!=0 and d.imdb_id=i.id;
+
+ # celebrity -> celebrity_douban
+
+ insert ignore into movie.celebrity_douban(id,id_celebrity_imdb,name_zh)
+ select douban_movie.actor.actor_id,douban_movie.actor.imdb_id,douban_movie.actor.name
+ from douban_movie.actor where douban_movie.actor.imdb_id!=0;
+
+  insert ignore into movie.celebrity_douban(id,id_celebrity_imdb,name_zh)
+ select douban_movie.actor.actor_id,1,douban_movie.actor.name
+ from douban_movie.actor where douban_movie.actor.imdb_id=0;
+
+  # movie -> movie_imdb
+    ...
+
+ # movie -> movie_douban
+
+ insert ignore into movie.celebrity_douban(id,id_celebrity_imdb,name_zh)
+ select douban_movie.actor.actor_id,douban_movie.actor.imdb_id,douban_movie.actor.name
+ from douban_movie.actor where douban_movie.actor.imdb_id!=0;
+
+ insert ignore into movie.celebrity_douban(id,id_celebrity_imdb,name_zh)
+ select douban_movie.actor.actor_id,1,douban_movie.actor.name
+ from douban_movie.actor where douban_movie.actor.imdb_id=0;
 
  */
 

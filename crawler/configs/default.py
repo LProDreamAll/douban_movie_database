@@ -18,11 +18,10 @@ DB_NAME = 'movie'
 DB_CHARSET = 'utf8mb4'
 
 # 批量处理数据插入限制
-# BATCH_NUM = 100
-BATCH_NUM = 2
+BATCH_NUM = 50
 
 # 当前请求列表数量限制
-SELECT_LIMIT = 100
+SELECT_LIMIT = 100000
 
 # 随机请求头列表
 USER_AGENT_LIST = [

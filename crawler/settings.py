@@ -21,6 +21,8 @@ ROBOTSTXT_OBEY = False
 # FEED_EXPORT_ENCODING = 'utf-8'
 
 # 日志
+import datetime
+
 # LOG_FILE = 'log_{}.txt'.format(datetime.date.today())
 LOG_LEVEL = 'INFO'
 # 其它输出是否加入日志
@@ -50,6 +52,14 @@ DOWNLOADER_MIDDLEWARES = {
     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
 }
 
+# ------------------------------
+
+# x个错误即停止爬虫
+# CLOSESPIDER_ERRORCOUNT = 50
+
+# 爬虫失败重试次数
+max_retry_times = 2
+
 # 并发相关 -----------------------
 
 # 连续页面下载间隔时间 s
@@ -77,7 +87,7 @@ HTTPCACHE_ENABLED = False
 HTTPCACHE_EXPIRATION_SECS = 3600000
 
 # 缓存路径(默认为：.scrapy/httpcache)
-HTTPCACHE_DIR = 'crawler/spiders/httpcache'
+# HTTPCACHE_DIR = 'crawler/tools/httpcache'
 
 # 忽略的状态码
 HTTPCACHE_IGNORE_HTTP_CODES = []
@@ -89,8 +99,8 @@ HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 # https://github.com/rmax/scrapy-redis
 
 # redis缓存 True:不允许缓存，自动清理keys False:允许缓存，不自动清理
-SCHEDULER_FLUSH_ON_START = True
-# SCHEDULER_FLUSH_ON_START = False
+# SCHEDULER_FLUSH_ON_START = True
+SCHEDULER_FLUSH_ON_START = False
 
 # 调度器
 SCHEDULER = 'scrapy_redis.scheduler.Scheduler'
@@ -102,7 +112,7 @@ DUPEFILTER_CLASS = 'scrapy_redis.dupefilter.RFPDupeFilter'
 SCHEDULER_QUEUE_CLASS = 'scrapy_redis.queue.SpiderPriorityQueue'
 
 # 不清理redis队列，允许暂停/恢复爬网
-# SCHEDULER_PERSIST = True
+SCHEDULER_PERSIST = True
 
 # redis 主机+端口号+密码
 REDIS_HOST = '127.0.0.1'
@@ -110,7 +120,6 @@ REDIS_PORT = 6379
 REDIS_PARAMS = {
     'password': '1233'
 }
-
 
 # ----------------------------------------------------------------------------------------------------
 

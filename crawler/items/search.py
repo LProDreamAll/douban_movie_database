@@ -27,7 +27,7 @@ class MovieDouban(scrapy.Item):
 class CelebrityDouban(scrapy.Item):
     id = scrapy.Field()
     id_celebrity_imdb = scrapy.Field()
-    name_en = scrapy.Field()
+    name_origin = scrapy.Field()
 
 
 class MovieScene(scrapy.Item):
@@ -42,9 +42,9 @@ class CelebrityScene(scrapy.Item):
 
 class MovieImdb(scrapy.Item):
     id = scrapy.Field()
-    is_douban_updated = scrapy.Field()
+    id_movie_douban = scrapy.Field()
 
 
 class CelebrityImdb(scrapy.Item):
     id = scrapy.Field()
-    is_douban_updated = scrapy.Field()
+    id_celebrity_douban= scrapy.Field()
